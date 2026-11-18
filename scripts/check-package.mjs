@@ -245,6 +245,9 @@ function verifyDocumentation() {
   const cli = read('docs/cli-reference.md');
   const scoring = read('docs/scoring-and-backslide.md');
   const skill = read('skills/ux-guard/SKILL.md');
+  const normalizedReadme = readme.replace(/^>\s?/gm, '').replace(/\s+/g, ' ');
+  const normalizedScoring = scoring.replace(/\s+/g, ' ');
+  const normalizedSkill = skill.replace(/\s+/g, ' ');
 
   assert.match(
     readme,
@@ -263,14 +266,23 @@ function verifyDocumentation() {
     '`report` exits 0 whenever it renders successfully',
     'Requiring `report` alone does not block advisory backslide',
   ]) {
-    assert.ok(scoring.includes(truth), `scoring documentation is missing: ${truth}`);
+    assert.ok(
+      normalizedScoring.includes(truth),
+      `scoring documentation is missing: ${truth}`,
+    );
   }
   for (const prompt of [
     'Show me where ux-guard scoring comes from and explain every score',
     'Compare this branch with origin/main and explain every backslide signal; do not change policy or baselines',
   ]) {
-    assert.ok(readme.includes(prompt), `README is missing Agent Skill prompt: ${prompt}`);
-    assert.ok(skill.includes(prompt), `skill is missing Agent Skill prompt: ${prompt}`);
+    assert.ok(
+      normalizedReadme.includes(prompt),
+      `README is missing Agent Skill prompt: ${prompt}`,
+    );
+    assert.ok(
+      normalizedSkill.includes(prompt),
+      `skill is missing Agent Skill prompt: ${prompt}`,
+    );
   }
 }
 

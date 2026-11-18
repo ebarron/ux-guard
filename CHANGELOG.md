@@ -15,6 +15,9 @@ not guaranteed before 1.0.
   decisions need it; no policy, baseline, waiver, or enforcement is activated.
 - The README terminal transcript is verified against actual CLI output. Public
   schema versions are unchanged.
+- Restored the detailed adoption overview and added linked scoring/backslide
+  guidance covering formulas, trusted-base detection, advisory results, and
+  consumer-owned CI enforcement. Scoring and enforcement behavior is unchanged.
 
 ### Distribution
 

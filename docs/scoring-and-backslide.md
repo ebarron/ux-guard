@@ -73,8 +73,9 @@ does not declare the UX good or make known defects acceptable.
 ux-guard defaults to detection and advisory reporting:
 
 - `report` exits 0 whenever it renders successfully, including when it reports
-  a quality problem, target breach, or regression. Invalid or unavailable
-  required configuration or evidence exits 2.
+  a quality problem, target breach, regression, or unavailable comparison
+  evidence. Missing active journey policy and malformed or unsafe inputs exit
+  2; missing or unexecutable run evidence remains visible in the report.
 - `check` exits 0 when there is no enforceable catalog or static-pattern
   finding, 1 when those findings exist, and 2 for configuration, evidence, or
   execution failure.
