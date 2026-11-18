@@ -33,13 +33,20 @@ that ux-guard ran when the local executable could not be found or executed.
    - good observations;
    - items needing attention;
    - unknown or missing evidence.
-4. Name the setup proposal path and state that it is unapproved.
-5. Recommend the smallest safe review step needed to complete catalog and
-   policy decisions.
+4. Present ordered, plain-English next steps generated from those findings:
+   - include use-case catalog work only when catalog evidence is missing;
+   - include pattern review only when pattern findings exist;
+   - include initial-baseline work only when baseline evidence is missing;
+   - include directly usable Agent Skill prompts for use-case and pattern work.
+5. Mention the setup supporting file only in the policy-and-baseline review
+   step. Explain that it records observed source roots, component and icon
+   usage, pattern counts, and unresolved policy choices and is not approval.
+6. End by stating that no policy, baseline, waiver, or enforcement was
+   activated.
 
 Setup must not create active policy, approve observed defects, adopt a baseline,
-add a waiver, or enable enforcement. If a proposal already exists, preserve it
-and report the no-overwrite failure.
+add a waiver, or enable enforcement. If supporting review work already exists,
+preserve it and report the no-overwrite failure.
 
 ## Audit and explain
 
@@ -64,6 +71,11 @@ or execution failed and must never be described as clean.
 Never describe baseline equality or `unchanged` as good UX. It means only that
 the measured state matches reviewed comparison evidence.
 
+Offer these directly usable prompts when users want to explore those results:
+
+- `Show me where ux-guard scoring comes from and explain every score`
+- `Compare this branch with origin/main and explain every backslide signal; do not change policy or baselines`
+
 ## Compare with a trusted base
 
 For regression-from-main requests:
@@ -78,13 +90,13 @@ Do not substitute working-tree policy, targets, or baselines when a trusted
 base was requested. Do not report “no regression” when comparison evidence was
 unavailable.
 
-## Prepare proposals
+## Prepare review work
 
-The agent may prepare an unapproved setup, policy, journey-baseline, or visual
-baseline proposal when asked. It may inspect and diff proposals, but it must
-stop before adoption or promotion and request explicit human approval.
+The agent may prepare unapproved setup support, policy, journey-baseline, or
+visual-baseline review work when asked. It may inspect and diff that work, but
+it must stop before adoption or promotion and request explicit human approval.
 
-Approval must name the exact proposal and resulting files. It is one-time and
+Approval must name the exact review artifact and resulting files. It is one-time and
 does not authorize:
 
 - future promotions;
@@ -115,7 +127,7 @@ Summarize:
 - good, needs-attention, and unknown results;
 - policy findings versus advisory findings;
 - trusted base and whether comparison evidence executed;
-- proposal paths and their unapproved status;
+- supporting review paths and their unapproved status;
 - recommendations in priority order;
 - exact validations that ran and any missing or unexecutable evidence;
 - approvals still required before policy, promotion, waivers, baselines, or

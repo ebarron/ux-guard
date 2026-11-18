@@ -73,6 +73,7 @@ const LIBRARY_FILES = [
 ];
 const PACKED_FILES = [
   'docs/cli-reference.md',
+  'docs/scoring-and-backslide.md',
   'docs/test-suite.md',
   'LICENSE',
   'NOTICE',
@@ -238,6 +239,53 @@ function verifyPackedBoundary() {
   );
 }
 
+function verifyDocumentation() {
+  const read = (path) => readFileSync(join(ROOT, path), 'utf8');
+  const readme = read('README.md');
+  const cli = read('docs/cli-reference.md');
+  const scoring = read('docs/scoring-and-backslide.md');
+  const skill = read('skills/ux-guard/SKILL.md');
+  const normalizedReadme = readme.replace(/^>\s?/gm, '').replace(/\s+/g, ' ');
+  const normalizedScoring = scoring.replace(/\s+/g, ' ');
+  const normalizedSkill = skill.replace(/\s+/g, ' ');
+
+  assert.match(
+    readme,
+    /\[Scoring and backslide protection\]\(#scoring-and-backslide-protection\)/,
+  );
+  assert.match(
+    cli,
+    /\[Scoring and backslide protection\]\(#scoring-and-backslide-protection\)/,
+  );
+  assert.ok(readme.includes('docs/scoring-and-backslide.md'));
+  assert.ok(cli.includes('scoring-and-backslide.md'));
+
+  for (const truth of [
+    'round(100 * target / actual)',
+    'There is no product-wide scalar score.',
+    '`report` exits 0 whenever it renders successfully',
+    'Requiring `report` alone does not block advisory backslide',
+  ]) {
+    assert.ok(
+      normalizedScoring.includes(truth),
+      `scoring documentation is missing: ${truth}`,
+    );
+  }
+  for (const prompt of [
+    'Show me where ux-guard scoring comes from and explain every score',
+    'Compare this branch with origin/main and explain every backslide signal; do not change policy or baselines',
+  ]) {
+    assert.ok(
+      normalizedReadme.includes(prompt),
+      `README is missing Agent Skill prompt: ${prompt}`,
+    );
+    assert.ok(
+      normalizedSkill.includes(prompt),
+      `skill is missing Agent Skill prompt: ${prompt}`,
+    );
+  }
+}
+
 function verifyReleaseWorkflow() {
   const source = readFileSync(join(ROOT, RELEASE_WORKFLOW_PATH), 'utf8');
   assert.match(source, /^on:\n  workflow_dispatch:\n/m);
@@ -291,5 +339,6 @@ verifyMetadata();
 verifyVersions();
 verifyRepositoryBoundary();
 verifyPackedBoundary();
+verifyDocumentation();
 verifyReleaseWorkflow();
 process.stdout.write('ux-guard package boundary: clean\n');

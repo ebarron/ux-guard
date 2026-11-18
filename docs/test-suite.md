@@ -114,10 +114,10 @@ application.
 ## `test/setup.test.mjs` (8 tests)
 
 - `setup explains insufficient evidence in an empty repository without writing files` — Proves setup reports unknown evidence honestly and leaves an empty repository unchanged.
-- `setup gives neutral projects human-readable first results and an unapproved proposal` — Proves the first-run terminal flow groups results clearly and writes only an unapproved review artifact.
+- `setup tailors next steps and keeps the README transcript exact` — Proves the terminal flow omits irrelevant work, explains its supporting file, and stays byte-for-byte synchronized with the documented hard-coded-color example.
 - `setup JSON is deterministic, noninteractive, and keeps approval boundaries explicit` — Proves automation output is stable and cannot imply policy, baseline, waiver, or enforcement approval.
-- `setup never overwrites an existing proposal or active policy` — Proves setup preserves prior review work and refuses to replace active policy.
-- `setup proposal paths reject traversal and symlink escapes` — Proves proposal writes remain within real repository directories.
+- `setup never overwrites an existing supporting review file or active policy` — Proves setup preserves prior review work and refuses to replace active policy.
+- `setup supporting review paths reject traversal and symlink escapes` — Proves supporting review writes remain within real repository directories.
 - `primary help leads with setup, check, and report while advanced help preserves reference commands` — Proves everyday help stays outcome-focused while existing maintainer commands remain discoverable.
 - `check and report errors point unconfigured repositories to the safe first step` — Proves daily commands give actionable guidance without bypassing review.
 - `legacy discovery output and schema remain backward compatible` — Proves the additive setup flow leaves the original discovery artifact contract intact.

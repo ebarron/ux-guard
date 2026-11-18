@@ -9,7 +9,15 @@ not guaranteed before 1.0.
 
 ### Changed
 
-- No functional CLI or schema changes.
+- Setup keeps the Good, Needs attention, and Unknown sections, then ends with
+  ordered next steps tailored to actual catalog, baseline, and pattern findings.
+- The supporting setup review file is explained only where policy and baseline
+  decisions need it; no policy, baseline, waiver, or enforcement is activated.
+- The README terminal transcript is verified against actual CLI output. Public
+  schema versions are unchanged.
+- Restored the detailed adoption overview and added linked scoring/backslide
+  guidance covering formulas, trusted-base detection, advisory results, and
+  consumer-owned CI enforcement. Scoring and enforcement behavior is unchanged.
 
 ### Distribution
 
@@ -22,7 +30,7 @@ not guaranteed before 1.0.
 ### Added
 
 - Added the safe `setup` first-run command with human and JSON results,
-  no-overwrite setup proposals, and explicit approval boundaries.
+  no-overwrite supporting review files, and explicit approval boundaries.
 - Added the distributable `skills/ux-guard` project skill.
 - Fresh public-source extraction of the generic CLI, library modules, and 100
   generic tests.

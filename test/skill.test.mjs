@@ -37,11 +37,23 @@ test('ux-guard skill preserves approval, evidence, and production-UI guardrails'
     'Do not alter production UI merely to pass',
     'could not be found or executed',
     'missing or unexecutable evidence',
+    'include pattern review only when pattern findings exist',
+    'directly usable Agent Skill prompts',
+    'supporting file only in the policy-and-baseline review step',
+    'no policy, baseline, waiver, or enforcement was activated',
   ]) {
     assert.match(normalized, new RegExp(guardrail, 'i'));
   }
   assert.doesNotMatch(source, new RegExp(['--no', 'install'].join('-')));
   assert.doesNotMatch(source, /discover write-candidate/);
+  assert.match(
+    source,
+    /Show me where ux-guard scoring comes from and explain every score/,
+  );
+  assert.match(
+    source,
+    /Compare this branch with origin\/main and explain every backslide signal; do not change policy or baselines/,
+  );
 });
 
 test('ux-guard skill is included by the npm package allowlist', () => {
