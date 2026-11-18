@@ -46,7 +46,7 @@
     "node": ">=22"
   },
   "dependencies": {
-    "typescript": "5.9.3"
+    "typescript": "7.0.2"
   },
   "scripts": {
     "check:hygiene": "node scripts/check-product-hygiene.mjs",
