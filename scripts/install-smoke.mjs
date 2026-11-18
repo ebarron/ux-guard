@@ -30,6 +30,7 @@ const EXPORTS = [
   'verdicts',
 ];
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const temporaryRoot = mkdtempSync(join(tmpdir(), 'ux-guard-install-'));
 
 try {
@@ -98,6 +99,61 @@ try {
     'exports loaded\n',
   );
 
+  mkdirSync(join(consumerDirectory, 'src'));
+  writeFileSync(
+    join(consumerDirectory, 'tsconfig.json'),
+    `${JSON.stringify(
+      {
+        compilerOptions: { jsx: 'react-jsx' },
+        include: ['src'],
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  writeFileSync(
+    join(consumerDirectory, 'src/Page.tsx'),
+    'export const Page = () => <main><p>Hello</p></main>;\n',
+  );
+
+  const setup = spawnSync(npx, ['ux-guard', 'setup'], {
+    cwd: consumerDirectory,
+    encoding: 'utf8',
+    shell: false,
+  });
+  assert.equal(setup.error, undefined);
+  assert.equal(setup.status, 0);
+  assert.equal(setup.stderr, '');
+  assert.match(setup.stdout, /^ux-guard setup/m);
+  assert.match(setup.stdout, /Saved ux-guard\/setup-proposal\.json/);
+  const setupProposal = JSON.parse(
+    readFileSync(
+      join(consumerDirectory, 'ux-guard/setup-proposal.json'),
+      'utf8',
+    ),
+  );
+  assert.equal(setupProposal.kind, 'ux-guard-setup-proposal');
+  assert.equal(setupProposal.approval.status, 'unapproved');
+  assert.equal(existsSync(join(consumerDirectory, '.uxguard.json')), false);
+
+  const check = spawnSync(npx, ['ux-guard', 'check'], {
+    cwd: consumerDirectory,
+    encoding: 'utf8',
+    shell: false,
+  });
+  assert.equal(check.error, undefined);
+  assert.equal(check.status, 2);
+  assert.match(check.stderr, /review and explicitly activate the setup proposal/);
+
+  const report = spawnSync(npx, ['ux-guard', 'report'], {
+    cwd: consumerDirectory,
+    encoding: 'utf8',
+    shell: false,
+  });
+  assert.equal(report.error, undefined);
+  assert.equal(report.status, 2);
+  assert.match(report.stderr, /Reporting remains unavailable/);
+
   const bin = join(
     consumerDirectory,
     'node_modules',
@@ -113,7 +169,9 @@ try {
   assert.equal(result.error, undefined);
   assert.equal(result.status, 2);
   assert.match(result.stderr, /usage: ux-guard <command>/);
-  process.stdout.write('ux-guard packed install and bin smoke test: passed\n');
+  process.stdout.write(
+    'ux-guard packed install, bin, and clean Quickstart smoke test: passed\n',
+  );
 } finally {
   rmSync(temporaryRoot, { recursive: true, force: true });
 }

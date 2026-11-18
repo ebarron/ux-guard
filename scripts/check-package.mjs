@@ -71,12 +71,15 @@ const LIBRARY_FILES = [
   'yaml.mjs',
 ];
 const PACKED_FILES = [
+  'docs/cli-reference.md',
+  'docs/test-suite.md',
   'LICENSE',
   'NOTICE',
   'README.md',
   'bin/ux-guard.mjs',
   ...LIBRARY_FILES.map((name) => `lib/${name}`),
   'package.json',
+  'skills/ux-guard/SKILL.md',
 ].sort();
 const ROOT_FILES = new Set([
   '.github',
@@ -96,6 +99,7 @@ const ROOT_FILES = new Set([
   'package-lock.json',
   'package.json',
   'scripts',
+  'skills',
   'test',
 ]);
 
@@ -111,7 +115,15 @@ function verifyMetadata() {
   assert.equal(pkg.license, 'Apache-2.0');
   assert.deepEqual(pkg.engines, { node: '>=22' });
   assert.deepEqual(pkg.bin, { 'ux-guard': 'bin/ux-guard.mjs' });
-  assert.deepEqual(pkg.files, ['bin', 'lib', 'README.md', 'LICENSE', 'NOTICE']);
+  assert.deepEqual(pkg.files, [
+    'bin',
+    'docs',
+    'lib',
+    'skills',
+    'README.md',
+    'LICENSE',
+    'NOTICE',
+  ]);
   assert.deepEqual(pkg.exports, EXPORTS);
   assert.deepEqual(pkg.dependencies, { typescript: TYPESCRIPT_VERSION });
   assert.equal(Object.hasOwn(pkg, 'publishConfig'), false);
@@ -203,7 +215,7 @@ function verifyRepositoryBoundary() {
     const source = readFileSync(join(ROOT, 'test', name), 'utf8');
     return count + [...source.matchAll(/\btest\(/g)].length;
   }, 0);
-  assert.equal(testCount, 100);
+  assert.equal(testCount, 111);
 }
 
 function verifyPackedBoundary() {
