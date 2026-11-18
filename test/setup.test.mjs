@@ -66,7 +66,10 @@ test('setup tailors next steps and keeps the README transcript exact', async () 
     result.out,
     /Help me review ux-guard\/setup-proposal\.json, decide what should become reviewed ux-guard policy, and prepare the initial baseline; do not activate anything until I explicitly approve it/,
   );
-  assert.match(result.out, /After human approval and activation, run ux-guard check and ux-guard report/);
+  assert.match(
+    result.out,
+    /Run ux-guard report after reviewed journey policy and a journey report path are configured/,
+  );
   assert.match(result.out, /No policy, baseline, waiver, or enforcement was activated/);
   assert.doesNotMatch(result.out, /^Setup proposal$/m);
   assert.doesNotMatch(result.out, /styling and pattern issues|Review ux-guard's observed/);
@@ -94,6 +97,41 @@ export const Page = () => <main>{colors.join(',')}</main>;
   assert.equal(documented.err, '');
   const readme = readFileSync(join(PACKAGE_ROOT, 'README.md'), 'utf8')
     .replaceAll('\r\n', '\n');
+  const gettingStartedAt = readme.indexOf('## Getting started');
+  const dailyUseAt = readme.indexOf('## Daily use');
+  const safetyAt = readme.indexOf('## Safety and approval');
+  const setupReferenceAt = readme.indexOf('## Setup output reference');
+  assert.ok(
+    gettingStartedAt >= 0 &&
+      dailyUseAt > gettingStartedAt &&
+      safetyAt > dailyUseAt &&
+      setupReferenceAt > safetyAt,
+    'README should complete onboarding before safety and setup internals',
+  );
+  const onboarding = readme.slice(gettingStartedAt, dailyUseAt);
+  for (const stage of [
+    'Define the user outcomes that matter',
+    'Decide which UI patterns are allowed',
+    'Prepare reviewed comparison evidence',
+    'Run the first meaningful check',
+  ]) {
+    assert.match(onboarding, new RegExp(stage));
+  }
+  assert.match(
+    onboarding,
+    /approved convention, tolerated existing debt to\s+> record in the baseline/,
+  );
+  assert.match(onboarding, /product owner/);
+  assert.doesNotMatch(onboarding, /discover write-candidate/);
+  assert.ok(
+    readme.indexOf('Check my current work with ux-guard', dailyUseAt) <
+      readme.indexOf('npx ux-guard check', dailyUseAt),
+    'Daily use should lead with Agent Skill prompts',
+  );
+  assert.match(
+    readme,
+    /\[Enumerated 111-test catalog and verification commands\]\(docs\/test-suite\.md\)/,
+  );
   const introduction = '`setup` inspects non-test UI source and reports what it could establish:';
   const introductionAt = readme.indexOf(introduction);
   const fenceAt = readme.indexOf('```text\n', introductionAt);
@@ -139,7 +177,7 @@ test('setup JSON is deterministic, noninteractive, and keeps approval boundaries
       '1. Define the important user workflows and use cases. Agent Skill prompt: "Help me define ux-guard use cases for this repo"',
       '2. Review the observed styling and pattern issues (inline styles, pixel literals, raw button elements, and hard-coded colors) and decide which are intentional conventions versus UX debt. Agent Skill prompt: "Review ux-guard\'s observed inline styles, pixel literals, raw button elements, and hard-coded colors in this repo and help me decide which are intentional conventions versus UX debt; do not change policy or baselines"',
       '3. Decide what should become reviewed policy and prepare the initial baseline. Use ux-guard/setup-proposal.json as a supporting review file; it contains observed source roots, component and icon usage, pattern counts, and unresolved policy choices. Do not activate policy or baseline until a human explicitly approves them. Agent Skill prompt: "Help me review ux-guard/setup-proposal.json, decide what should become reviewed ux-guard policy, and prepare the initial baseline; do not activate anything until I explicitly approve it"',
-      '4. After human approval and activation, run ux-guard check and ux-guard report; report will explain any remaining journey evidence gaps.',
+      '4. After human approval and activation, run ux-guard check. Run ux-guard report after reviewed journey policy and a journey report path are configured.',
       'No policy, baseline, waiver, or enforcement was activated.',
     ].join('\n'),
   );

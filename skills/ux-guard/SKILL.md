@@ -48,6 +48,41 @@ Setup must not create active policy, approve observed defects, adopt a baseline,
 add a waiver, or enable enforcement. If supporting review work already exists,
 preserve it and report the no-overwrite failure.
 
+## Guide initial adoption
+
+Good results require repository-owned use cases and reviewed UI conventions.
+Discovery can show what exists, but it cannot decide what matters or what is
+good. Keep these decisions with the human product or design owner.
+
+When the user continues after setup:
+
+1. Define and review the use-case catalog. Inspect product documentation,
+   navigation, and existing tests, then propose the important workflows with a
+   persona, goal, success outcome, starting point, priority tier, effect, and
+   owner. Keep the catalog partial or unapproved until an owner confirms its
+   coverage.
+2. Review observed controls and patterns. Use setup findings and the supporting
+   review file to show controls, props, components, icons, styling, and pattern
+   debt. Ask the owner to classify each item as an approved convention,
+   tolerated existing debt to record in the baseline, or a non-approved pattern
+   to fix. Never infer approval from frequency.
+3. Prepare comparison evidence. Use only evidence produced by the repository's
+   real browser harness and configured journeys or visuals. Prepare unapproved
+   pattern, journey, or visual baseline review work as applicable, explain what
+   each baseline would tolerate, and stop before promotion. If evidence cannot
+   execute, leave it unknown; never fabricate a replacement.
+4. After explicit approval names the exact review artifacts and resulting
+   files, activate only that one-time approval. Run `check` and, when journey
+   reporting is configured, `report`. Explain good, needs-attention, and unknown
+   results while separating enforceable policy findings from advisory findings.
+
+Offer these directly usable onboarding prompts:
+
+- `Help me define and review ux-guard use cases for this repo. Identify the important user workflows, personas, goals, success outcomes, starting points, priority tiers, and owners. Prepare the use-case catalog for review, but do not approve or activate it.`
+- `Inspect ux-guard's setup findings and ux-guard/setup-proposal.json. Show me the observed controls, control props, components, icons, and styling patterns. Help me classify each as an approved convention, tolerated existing debt to record in the baseline, or a non-approved pattern to fix. Do not change policy or baselines.`
+- `Prepare ux-guard's baseline review work for the approved use cases and UI conventions. Use only real repository evidence: the setup proposal for static patterns and the existing browser harness for configured journeys or visuals. Show what each proposed baseline would tolerate, keep every artifact unapproved, and stop before promotion.`
+- `These exact ux-guard review artifacts and resulting files are approved: [list paths]. Activate only those approvals. Run ux-guard check and, if journey reporting is configured, ux-guard report. Explain the first result as good, needs attention, and unknown. Separate enforceable policy findings from advisory UX findings. Do not add waivers or change policy or baselines.`
+
 ## Audit and explain
 
 Run `check` in JSON mode for reviewed code-policy alignment. Run `report` in
@@ -73,6 +108,9 @@ the measured state matches reviewed comparison evidence.
 
 Offer these directly usable prompts when users want to explore those results:
 
+- `Check my current work with ux-guard. Run the installed local check and, when configured, report. Summarize good, needs attention, and unknown evidence. Do not change policy, baselines, waivers, or enforcement.`
+- `Compare this change with origin/main using ux-guard's trusted-base mode. Explain every policy finding and advisory backslide signal, including missing evidence. Do not change policy or baselines.`
+- `Explain the ux-guard findings in this branch, then fix the actionable UI issues without weakening policy, adding waivers, or updating baselines just to make the result green. Explain the intended user outcome before editing production UI, and rerun the same ux-guard checks afterward.`
 - `Show me where ux-guard scoring comes from and explain every score`
 - `Compare this branch with origin/main and explain every backslide signal; do not change policy or baselines`
 

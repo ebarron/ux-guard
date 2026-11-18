@@ -41,6 +41,10 @@ test('ux-guard skill preserves approval, evidence, and production-UI guardrails'
     'directly usable Agent Skill prompts',
     'supporting file only in the policy-and-baseline review step',
     'no policy, baseline, waiver, or enforcement was activated',
+    'approved convention, tolerated existing debt to record in the baseline, or a non-approved pattern',
+    'Never infer approval from frequency',
+    'real browser harness',
+    'leave it unknown; never fabricate',
   ]) {
     assert.match(normalized, new RegExp(guardrail, 'i'));
   }
@@ -54,6 +58,17 @@ test('ux-guard skill preserves approval, evidence, and production-UI guardrails'
     source,
     /Compare this branch with origin\/main and explain every backslide signal; do not change policy or baselines/,
   );
+  for (const prompt of [
+    'Help me define and review ux-guard use cases for this repo',
+    "Inspect ux-guard's setup findings and ux-guard/setup-proposal.json",
+    "Prepare ux-guard's baseline review work",
+    'These exact ux-guard review artifacts and resulting files are approved',
+    'Check my current work with ux-guard',
+    "Compare this change with origin/main using ux-guard's trusted-base mode",
+    'fix the actionable UI issues without weakening policy',
+  ]) {
+    assert.match(source, new RegExp(prompt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
 });
 
 test('ux-guard skill is included by the npm package allowlist', () => {
