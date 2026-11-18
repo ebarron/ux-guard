@@ -62,7 +62,6 @@ jobs:
           MAIN_SHA="$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)"
           test "$GITHUB_SHA" = "$MAIN_SHA"
           test "$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA" --jq .commit.verification.verified)" = "true"
-          test "$(gh api "repos/$GITHUB_REPOSITORY/immutable-releases" --jq .enabled)" = "true"
           test -z "$(git status --porcelain)"
 
       - name: Fail if the version, tag, or release already exists
@@ -137,7 +136,6 @@ jobs:
           MAIN_SHA="$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)"
           test "$GITHUB_SHA" = "$MAIN_SHA"
           test "$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA" --jq .commit.verification.verified)" = "true"
-          test "$(gh api "repos/$GITHUB_REPOSITORY/immutable-releases" --jq .enabled)" = "true"
           TAG="v$RELEASE_VERSION"
           if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
             echo "::error::tag already exists: $TAG"
@@ -244,7 +242,6 @@ jobs:
         run: |
           set -euo pipefail
           test "$GITHUB_SHA" = "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)"
-          test "$(gh api "repos/$GITHUB_REPOSITORY/immutable-releases" --jq .enabled)" = "true"
           TAG="v$RELEASE_VERSION"
           if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
             echo "::error::tag already exists: $TAG"

@@ -12,9 +12,16 @@ publishing can be configured for the permanent OIDC-only workflow.
    environment secret named `NPM_TOKEN`. Limit it to the
    `@edjbarron/ux-guard` package with only the access needed to publish, and
    retain the environment's protected-branch and reviewer controls.
-3. Confirm that `@edjbarron/ux-guard@0.6.0`, `v0.6.0`, and the corresponding
+3. Confirm release immutability with an administrator credential. GitHub's
+   per-run token cannot read this administration-scoped setting:
+
+   ```sh
+   test "$(gh api repos/ebarron/ux-guard/immutable-releases --jq .enabled)" = true
+   ```
+
+4. Confirm that `@edjbarron/ux-guard@0.6.0`, `v0.6.0`, and the corresponding
    GitHub release remain absent.
-4. Do not publish locally, create the tag manually, or run any other version.
+5. Do not publish locally, create the tag manually, or run any other version.
 
 After the secret is confirmed, dispatch exactly:
 
