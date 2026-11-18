@@ -83,8 +83,9 @@ ux-guard defaults to detection and advisory reporting:
   unless the consumer adopts a separate, reviewed enforcement decision.
 
 A merge is prevented only when the consumer runs a pinned, trusted ux-guard
-configuration in CI and makes that check required. Requiring `report` alone
-does not block advisory backslide because a successful report returns 0.
+configuration in CI and makes that check required.
+Requiring `report` alone does not block advisory backslide because a successful
+report returns 0.
 Consumers that choose to enforce advisory signals need a trusted classifier or
 wrapper with an explicit reviewed failure policy.
 

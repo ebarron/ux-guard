@@ -94,11 +94,15 @@ export const Page = () => <main>{colors.join(',')}</main>;
   assert.equal(documented.err, '');
   const readme = readFileSync(join(PACKAGE_ROOT, 'README.md'), 'utf8')
     .replaceAll('\r\n', '\n');
-  const transcript = readme.match(
-    /`setup` inspects non-test UI source and reports what it could establish:\n\n```text\n(?<text>[\s\S]*?)```\n/,
+  const introduction = '`setup` inspects non-test UI source and reports what it could establish:';
+  const introductionAt = readme.indexOf(introduction);
+  const fenceAt = readme.indexOf('```text\n', introductionAt);
+  const fenceEnd = readme.indexOf('```\n', fenceAt + '```text\n'.length);
+  assert.ok(introductionAt >= 0 && fenceAt >= 0 && fenceEnd >= 0, 'README needs the setup terminal transcript');
+  assert.equal(
+    documented.out,
+    readme.slice(fenceAt + '```text\n'.length, fenceEnd),
   );
-  assert.ok(transcript, 'README needs the setup terminal transcript');
-  assert.equal(documented.out, transcript.groups.text);
 });
 
 test('setup JSON is deterministic, noninteractive, and keeps approval boundaries explicit', async () => {
