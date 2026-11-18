@@ -176,7 +176,7 @@ jobs:
           TARBALL_NAME="$(node -e "const p=require('./dist/npm-pack.json')[0]; process.stdout.write(p.filename)")"
           EXPECTED_TARBALL="edjbarron-ux-guard-$RELEASE_VERSION.tgz"
           test "$TARBALL_NAME" = "$EXPECTED_TARBALL"
-          TARBALL="dist/$TARBALL_NAME"
+          TARBALL="./dist/$TARBALL_NAME"
           EXPECTED_INTEGRITY="$(node -e "const p=require('./dist/npm-pack.json')[0]; process.stdout.write(p.integrity)")"
           npm run test:install -- "$TARBALL"
           npm sbom --sbom-format cyclonedx --omit=dev > "dist/ux-guard-$RELEASE_VERSION.sbom.cdx.json"

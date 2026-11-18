@@ -230,7 +230,7 @@ jobs:
           npm pack --json --ignore-scripts --pack-destination dist > dist/npm-pack.json
           TARBALL_NAME="$(node -e "const p=require('./dist/npm-pack.json')[0]; process.stdout.write(p.filename)")"
           test "$TARBALL_NAME" = "edjbarron-ux-guard-0.6.0.tgz"
-          TARBALL="dist/$TARBALL_NAME"
+          TARBALL="./dist/$TARBALL_NAME"
           EXPECTED_INTEGRITY="$(node -e "const p=require('./dist/npm-pack.json')[0]; process.stdout.write(p.integrity)")"
           npm run test:install -- "$TARBALL"
           npm sbom --sbom-format cyclonedx --omit=dev > "dist/ux-guard-0.6.0.sbom.cdx.json"
