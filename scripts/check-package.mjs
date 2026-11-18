@@ -85,6 +85,7 @@ const ROOT_FILES = new Set([
   'CHANGELOG.md',
   'CODE_OF_CONDUCT.md',
   'CONTRIBUTING.md',
+  'docs',
   'LICENSE',
   'NOTICE',
   'PROVENANCE.md',

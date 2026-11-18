@@ -19,6 +19,7 @@ const PUBLIC_REPOSITORY_PATHS = [
   'PROVENANCE.md',
   'README.md',
   'SECURITY.md',
+  'docs',
   'LICENSE',
   'NOTICE',
   'package.json',
