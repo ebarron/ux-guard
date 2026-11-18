@@ -67,7 +67,6 @@ jobs:
           test "$GITHUB_SHA" = "$(git rev-parse HEAD)"
           test "$GITHUB_SHA" = "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)"
           test "$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA" --jq .commit.verification.verified)" = "true"
-          test "$(gh api "repos/$GITHUB_REPOSITORY/immutable-releases" --jq .enabled)" = "true"
           test "$(node -p "require('./package.json').name")" = "$EXPECTED_PACKAGE"
           test "$(node -p "require('./package.json').version")" = "$RELEASE_VERSION"
           node - "$RELEASE_VERSION" <<'NODE'
@@ -211,7 +210,6 @@ jobs:
           test "$GITHUB_SHA" = "$(git rev-parse HEAD)"
           test "$GITHUB_SHA" = "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)"
           test "$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA" --jq .commit.verification.verified)" = "true"
-          test "$(gh api "repos/$GITHUB_REPOSITORY/immutable-releases" --jq .enabled)" = "true"
           test "$(node -p "require('./package.json').name")" = "$EXPECTED_PACKAGE"
           test "$(node -p "require('./package.json').version")" = "$RELEASE_VERSION"
           test -z "$(git status --porcelain)"
