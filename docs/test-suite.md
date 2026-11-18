@@ -1,6 +1,6 @@
 # Test suite catalog
 
-ux-guard has exactly 100 generic tests. This catalog was built from the test
+ux-guard has exactly 111 generic tests. This catalog was built from the test
 names discovered by Node's test runner, not from a feature checklist. Run
 `npm test` to execute them and `npm run check:test-catalog` to verify that this
 page still matches the test files and names.
@@ -111,6 +111,17 @@ application.
 - `tampered completion, traversal artifacts, and bad digests fail closed` — Proves altered summaries, unsafe artifact paths, and invalid hashes are rejected.
 - `completion result is derived rather than journey-authored` — Proves the final run result is computed from evidence rather than accepted from a producer.
 
+## `test/setup.test.mjs` (8 tests)
+
+- `setup explains insufficient evidence in an empty repository without writing files` — Proves setup reports unknown evidence honestly and leaves an empty repository unchanged.
+- `setup gives neutral projects human-readable first results and an unapproved proposal` — Proves the first-run terminal flow groups results clearly and writes only an unapproved review artifact.
+- `setup JSON is deterministic, noninteractive, and keeps approval boundaries explicit` — Proves automation output is stable and cannot imply policy, baseline, waiver, or enforcement approval.
+- `setup never overwrites an existing proposal or active policy` — Proves setup preserves prior review work and refuses to replace active policy.
+- `setup proposal paths reject traversal and symlink escapes` — Proves proposal writes remain within real repository directories.
+- `primary help leads with setup, check, and report while advanced help preserves reference commands` — Proves everyday help stays outcome-focused while existing maintainer commands remain discoverable.
+- `check and report errors point unconfigured repositories to the safe first step` — Proves daily commands give actionable guidance without bypassing review.
+- `legacy discovery output and schema remain backward compatible` — Proves the additive setup flow leaves the original discovery artifact contract intact.
+
 ## `test/shards.test.mjs` (8 tests)
 
 - `immutable per-test shards aggregate deterministically independent of file order` — Proves parallel evidence fragments produce one stable aggregate regardless of directory order.
@@ -121,6 +132,12 @@ application.
 - `aggregation rejects symlinks and filename/content mismatches` — Proves shard identity cannot be redirected or mislabeled through filesystem tricks.
 - `corruption canary detects a duplicate shard id under another path` — Proves duplicate logical evidence is detected even when stored under a different filename.
 - `aggregation distinguishes forged run identity from a tool or policy upgrade` — Proves tampering is reported separately from a legitimate contract-version mismatch.
+
+## `test/skill.test.mjs` (3 tests)
+
+- `ux-guard skill metadata is concise, valid, and trigger-rich` — Proves the distributable skill follows metadata conventions and advertises the requested user intents.
+- `ux-guard skill preserves approval, evidence, and production-UI guardrails` — Proves agent guidance cannot hide missing evidence, silently approve artifacts, or modify UI merely to pass.
+- `ux-guard skill is included by the npm package allowlist` — Proves the project skill is selected for distribution with the package.
 
 ## `test/targets.test.mjs` (6 tests)
 

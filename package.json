@@ -16,7 +16,9 @@
   "homepage": "https://github.com/ebarron/ux-guard#readme",
   "files": [
     "bin",
+    "docs",
     "lib",
+    "skills",
     "README.md",
     "LICENSE",
     "NOTICE"

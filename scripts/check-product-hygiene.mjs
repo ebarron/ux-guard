@@ -27,6 +27,7 @@ const PUBLIC_REPOSITORY_PATHS = [
   'bin',
   'lib',
   'scripts',
+  'skills',
   'test',
 ];
 const REQUIRED_NOTICE_ATTRIBUTION =
