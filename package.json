@@ -1,0 +1,41 @@
+{
+  "name": "ux-guard",
+  "version": "0.6.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic UX checks and advisory evidence, verdict, and recommendation reports.",
+  "license": "Apache-2.0",
+  "files": [
+    "bin",
+    "lib",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "bin": {
+    "ux-guard": "bin/ux-guard.mjs"
+  },
+  "exports": {
+    "./authoritative": "./lib/authoritative.mjs",
+    "./baselines": "./lib/baselines.mjs",
+    "./journey-policy": "./lib/journey-policy.mjs",
+    "./journeys": "./lib/journeys.mjs",
+    "./observations": "./lib/observations.mjs",
+    "./playwright": "./lib/playwright.mjs",
+    "./run-contract": "./lib/run-contract.mjs",
+    "./shards": "./lib/shards.mjs",
+    "./targets": "./lib/targets.mjs",
+    "./visuals": "./lib/visuals.mjs",
+    "./verdicts": "./lib/verdicts.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "typescript": "5.9.3"
+  },
+  "scripts": {
+    "check:hygiene": "node scripts/check-product-hygiene.mjs",
+    "test": "node --test \"test/*.test.mjs\""
+  }
+}
