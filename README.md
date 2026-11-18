@@ -247,7 +247,7 @@ Next steps
   1. Define the important user workflows and use cases. Agent Skill prompt: "Help me define ux-guard use cases for this repo"
   2. Review the observed styling and pattern issues (hard-coded colors) and decide which are intentional conventions versus UX debt. Agent Skill prompt: "Review ux-guard's observed hard-coded colors in this repo and help me decide which are intentional conventions versus UX debt; do not change policy or baselines"
   3. Decide what should become reviewed policy and prepare the initial baseline. Use ux-guard/setup-proposal.json as a supporting review file; it contains observed source roots, component and icon usage, pattern counts, and unresolved policy choices. Do not activate policy or baseline until a human explicitly approves them. Agent Skill prompt: "Help me review ux-guard/setup-proposal.json, decide what should become reviewed ux-guard policy, and prepare the initial baseline; do not activate anything until I explicitly approve it"
-  4. After human approval and activation, run ux-guard check and ux-guard report; report will explain any remaining journey evidence gaps.
+  4. After human approval and activation, run ux-guard check. Run ux-guard report after reviewed journey policy and a journey report path are configured.
   No policy, baseline, waiver, or enforcement was activated.
 ```
 
