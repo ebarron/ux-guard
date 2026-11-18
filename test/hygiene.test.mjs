@@ -14,6 +14,21 @@ test('public-source hygiene rejects consumer and framework assumptions', () => {
     join(root, 'NOTICE'),
     `ux-guard\nCopyright 2026 ${['Net', 'App'].join('')}, Inc.\n`,
   );
+  mkdirSync(join(root, '.github/workflows'), { recursive: true });
+  const sourceCommit = 'a'.repeat(40);
+  writeFileSync(
+    join(root, 'PROVENANCE.md'),
+    [
+      `- Source repository: https://github.com/${['Net', 'App'].join('')}/${['har', 'vest'].join('')}-ui`,
+      `- Source commit: \`${sourceCommit}\``,
+      '',
+    ].join('\n'),
+  );
+  writeFileSync(
+    join(root, '.github/workflows/ci.yml'),
+    `    uses: actions/checkout@${'b'.repeat(40)} # v1.2.3\n`,
+  );
+  assert.deepEqual(scanProductStrings(root), []);
   writeFileSync(
     join(root, 'README.md'),
     `Built for ${['Net', 'App'].join('')} systems.\n`,

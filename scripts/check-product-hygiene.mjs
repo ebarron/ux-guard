@@ -9,8 +9,16 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const PUBLIC_SOURCE_PATHS = [
+const PUBLIC_REPOSITORY_PATHS = [
+  '.github',
+  '.gitignore',
+  '.npmrc',
+  'CHANGELOG.md',
+  'CODE_OF_CONDUCT.md',
+  'CONTRIBUTING.md',
+  'PROVENANCE.md',
   'README.md',
+  'SECURITY.md',
   'LICENSE',
   'NOTICE',
   'package.json',
@@ -35,8 +43,10 @@ const DISALLOWED_STRINGS = [
   ['dashboard-brand', token(['gra', 'fana'].join(''))],
 ];
 const ALLOWED_LINK_HOSTS = new Set([
+  'github.com',
   'json-schema.org',
   'registry.npmjs.org',
+  'www.contributor-covenant.org',
   'www.apache.org',
 ]);
 const REAL_HASH = /\b[a-f0-9]{40}(?:[a-f0-9]{24})?\b/g;
@@ -63,10 +73,11 @@ export function scanProductStrings(root = PACKAGE_ROOT) {
           findings.push(finding(root, path, index, 'non-public-link'));
         }
       }
-      if (REAL_HASH.test(line)) {
-        findings.push(finding(root, path, index, 'literal-artifact-hash'));
+      for (const match of line.matchAll(REAL_HASH)) {
+        if (!isAllowedRepositoryHash(root, path, line, match[0])) {
+          findings.push(finding(root, path, index, 'literal-artifact-hash'));
+        }
       }
-      REAL_HASH.lastIndex = 0;
       if (RUN_LINK.test(line)) {
         findings.push(finding(root, path, index, 'ci-run-link'));
       }
@@ -83,7 +94,7 @@ export function scanProductStrings(root = PACKAGE_ROOT) {
 
 function sourceFiles(root) {
   const files = [];
-  for (const path of PUBLIC_SOURCE_PATHS.map((name) => join(root, name))) {
+  for (const path of PUBLIC_REPOSITORY_PATHS.map((name) => join(root, name))) {
     if (!existsSync(path)) continue;
     if (statSync(path).isFile()) {
       files.push(path);
@@ -112,10 +123,33 @@ function finding(root, path, index, rule) {
 }
 
 function isRequiredNoticeAttribution(root, path, line, rule) {
+  const repositoryPath = relative(root, path).replaceAll('\\', '/');
   return (
-    relative(root, path).replaceAll('\\', '/') === 'NOTICE' &&
-    rule === 'brand-company' &&
-    line === REQUIRED_NOTICE_ATTRIBUTION
+    (repositoryPath === 'NOTICE' &&
+      rule === 'brand-company' &&
+      line === REQUIRED_NOTICE_ATTRIBUTION) ||
+    (repositoryPath === 'PROVENANCE.md' &&
+      (rule === 'brand-company' || rule === 'host-project-alias') &&
+      line ===
+        `- Source repository: https://github.com/${['Net', 'App'].join('')}/${['har', 'vest'].join('')}-ui`)
+  );
+}
+
+function isAllowedRepositoryHash(root, path, line, hash) {
+  const repositoryPath = relative(root, path).replaceAll('\\', '/');
+  if (
+    repositoryPath === 'PROVENANCE.md' &&
+    (line === `- Source commit: \`${hash}\`` ||
+      line === `- Source tree object: \`${hash}\`` ||
+      /^\| `[^`]+` \| `[a-f0-9]{40}` \|$/.test(line))
+  ) {
+    return true;
+  }
+  return (
+    repositoryPath.startsWith('.github/workflows/') &&
+    new RegExp(
+      `^\\s*uses:\\s*[A-Za-z0-9_.-]+\\/[A-Za-z0-9_.\\/-]+@${hash}\\s+#\\s+v\\d`,
+    ).test(line)
   );
 }
 

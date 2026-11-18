@@ -45,6 +45,8 @@
   },
   "scripts": {
     "check:hygiene": "node scripts/check-product-hygiene.mjs",
-    "test": "node --test \"test/*.test.mjs\""
+    "check:package": "node scripts/check-package.mjs",
+    "test": "node --test \"test/*.test.mjs\"",
+    "test:install": "node scripts/install-smoke.mjs"
   }
 }
