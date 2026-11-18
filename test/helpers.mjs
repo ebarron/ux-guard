@@ -4,6 +4,16 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// Test fixtures must not inherit a consumer run identity from hosted CI.
+for (const name of [
+  'GITHUB_SHA',
+  'UX_GUARD_BASE_COMMIT',
+  'UX_GUARD_BASE_SHA',
+  'UX_GUARD_CANDIDATE_SHA',
+]) {
+  delete process.env[name];
+}
+
 export const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 export const TYPESCRIPT = createRequire(import.meta.url).resolve('typescript');
 export const ts = createRequire(import.meta.url)('typescript');
