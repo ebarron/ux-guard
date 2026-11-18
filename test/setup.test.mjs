@@ -94,6 +94,41 @@ export const Page = () => <main>{colors.join(',')}</main>;
   assert.equal(documented.err, '');
   const readme = readFileSync(join(PACKAGE_ROOT, 'README.md'), 'utf8')
     .replaceAll('\r\n', '\n');
+  const gettingStartedAt = readme.indexOf('## Getting started');
+  const dailyUseAt = readme.indexOf('## Daily use');
+  const safetyAt = readme.indexOf('## Safety and approval');
+  const setupReferenceAt = readme.indexOf('## Setup output reference');
+  assert.ok(
+    gettingStartedAt >= 0 &&
+      dailyUseAt > gettingStartedAt &&
+      safetyAt > dailyUseAt &&
+      setupReferenceAt > safetyAt,
+    'README should complete onboarding before safety and setup internals',
+  );
+  const onboarding = readme.slice(gettingStartedAt, dailyUseAt);
+  for (const stage of [
+    'Define the user outcomes that matter',
+    'Decide which UI patterns are allowed',
+    'Prepare reviewed comparison evidence',
+    'Run the first meaningful check',
+  ]) {
+    assert.match(onboarding, new RegExp(stage));
+  }
+  assert.match(
+    onboarding,
+    /approved convention, tolerated existing debt to\s+> record in the baseline/,
+  );
+  assert.match(onboarding, /product owner/);
+  assert.doesNotMatch(onboarding, /discover write-candidate/);
+  assert.ok(
+    readme.indexOf('Check my current work with ux-guard', dailyUseAt) <
+      readme.indexOf('npx ux-guard check', dailyUseAt),
+    'Daily use should lead with Agent Skill prompts',
+  );
+  assert.match(
+    readme,
+    /\[Enumerated 111-test catalog and verification commands\]\(docs\/test-suite\.md\)/,
+  );
   const introduction = '`setup` inspects non-test UI source and reports what it could establish:';
   const introductionAt = readme.indexOf(introduction);
   const fenceAt = readme.indexOf('```text\n', introductionAt);
