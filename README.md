@@ -1,9 +1,9 @@
 # ux-guard
 
-`ux-guard` is a generic Node 22 package for deterministic UX policy checks,
-journey evidence contracts, strict visual profile/manifest lifecycles, trusted
-evidence validation, and advisory verdict reports. It contains no
-consumer-specific paths, products, or framework assumptions.
+`@edjbarron/ux-guard` is a generic Node.js package for deterministic UX policy
+checks, journey evidence contracts, strict visual profile and manifest
+lifecycles, trusted evidence validation, and advisory verdict reports. It has
+no consumer-specific paths, products, or framework assumptions.
 
 The package owns schemas, validation, aggregation, comparison, rendering, and
 optional structural browser bindings. A consumer owns its catalog, policy,
@@ -12,63 +12,92 @@ materialization. `authoritative` accepts raw shards only, reconstructs the
 expected run identity from trusted inputs, and emits one advisory bundle; it
 does not accept a candidate verdict.
 
-TypeScript is an exact package dependency, not a consumer-configured executable
-path. The repository lock integrity-pins it, and trusted CI installs with npm
-lifecycle scripts disabled.
+TypeScript `5.9.3` is an exact runtime dependency, not a
+consumer-configured executable path. The lockfile integrity-pins it, and CI
+installs with npm lifecycle scripts disabled.
 
 ## Distribution state
 
-Version `0.6.0` remains an embedded, private package. It has not been published,
-tagged, or released, and its planned public repository has not been created.
-After the host preparation change merges, the first external distribution step
-is public source and CI under `ebarron/ux-guard`; package publication remains a
-separate later decision.
+Version `0.6.0` is public source but is not published to npm. There is no
+release or tag. Install a reviewed GitHub source snapshot by full commit:
 
-## Extraction boundary
+```sh
+UX_GUARD_SHA=<reviewed-40-character-commit-sha>
+npm install --save-dev \
+  "https://github.com/ebarron/ux-guard/archive/${UX_GUARD_SHA}.tar.gz"
+npx --no-install ux-guard
+```
 
-The future public source consists of this directory's `bin/`, `lib/`, `test/`,
-and `scripts/` trees plus its package metadata, lock, README, license, and
-notice. The following stay consumer-owned and outside the extracted source:
+The package remains marked `private` to prevent accidental npm publication.
 
-- configuration, catalogs, policies, targets, reviewed baselines, and images;
-- end-to-end journeys, browser startup, framework styling/readiness, and
-  consumer artifact paths;
-- trusted-runner isolation, repository workflows, and repository assertions.
+## Requirements
 
-The embedded consumer tests exercise those outside-the-package responsibilities
-without making them public package fixtures. This preparation does not change
-schemas, exported module paths, the tool version, or enforcement decisions.
+- Node.js 22 or newer
+- npm
+- Git for trusted-revision reads
 
-Trust limitations: browser bindings can fabricate measurements unless they run
-inside a stronger sandbox. Trusted aggregation prevents candidate code from
-choosing policy or the final report; it does not establish that untrusted
-measurements reflect real user behavior.
+## CLI
+
+```sh
+npx --no-install ux-guard check --root .
+npx --no-install ux-guard report --root . --format markdown
+npx --no-install ux-guard authoritative --root . --base origin/main
+npx --no-install ux-guard baseline canary --root .
+npx --no-install ux-guard visual canary --root .
+npx --no-install ux-guard patterns canary --root .
+```
+
+Commands consume repository-relative policy and evidence paths. Review
+candidate and baseline promotion output before committing it. The CLI is
+advisory; consumers decide how to stage or enforce its results.
+
+## Module exports
+
+The package exposes eleven explicit subpaths:
+
+- `@edjbarron/ux-guard/authoritative`
+- `@edjbarron/ux-guard/baselines`
+- `@edjbarron/ux-guard/journey-policy`
+- `@edjbarron/ux-guard/journeys`
+- `@edjbarron/ux-guard/observations`
+- `@edjbarron/ux-guard/playwright`
+- `@edjbarron/ux-guard/run-contract`
+- `@edjbarron/ux-guard/shards`
+- `@edjbarron/ux-guard/targets`
+- `@edjbarron/ux-guard/visuals`
+- `@edjbarron/ux-guard/verdicts`
+
+## Trust boundary
+
+Browser bindings can fabricate measurements unless they run inside a stronger
+sandbox. Trusted aggregation prevents candidate code from choosing policy or
+the final report; it does not establish that untrusted measurements reflect
+real user behavior.
 
 Visual v1 keeps images outside the compact verdict report. A consumer supplies
 strict canonical profile and checkpoint policy files, while the package
 validates image paths, regular-file type, symlink boundaries, hashes,
 dimensions, profile identity, exact per-checkpoint tolerances, and reviewed
 masks. Candidate bundles are explicitly unapproved and no-overwrite.
-`visual inspect`, `visual diff`, and `visual promote` implement owner review;
-`visual canary` proves one-pixel-class, missing-checkpoint, profile-mismatch,
-and fail-closed behavior. With no reviewed baseline, comparison is
-`not-evaluated` and advisory.
 
 Owner targets v2 keep desired policy separate from current-state baselines.
-They explicitly classify each interaction metric as non-regressing after a
-reviewed comparison source exists or report-only until calibrated, and their
-hard floors independently bound successful, unexecutable, failed, skipped,
-infrastructure-error, and critical-finding counts.
-
 Target attainment v1 evaluates every configured hard floor and per-journey
-metric target. Numerical score v1 is owner-target-backed only: an at-most
-target scores 100 when attained, otherwise `round(100 * target / actual)`,
-with a breached zero target scoring 0. Journey and use-case aggregation use
-the minimum so stronger metrics cannot compensate for the weakest configured
-metric or scored required journey. Unmeasured and unexecutable journeys are
-not scored, partial target coverage stays explicit, and no product-wide scalar
-is emitted. Quality, target attainment, regression/backslide, numerical
-scores, and recommendations are separate verdict-report v6 sections.
+metric target. Quality, target attainment, regression, numerical scores, and
+recommendations remain separate report sections.
+
+## Development
+
+```sh
+npm ci --ignore-scripts
+npm run check:hygiene
+npm run check:package
+npm test
+npm pack --dry-run --ignore-scripts
+npm run test:install
+```
+
+The test suite contains 100 generic tests. See
+[CONTRIBUTING.md](CONTRIBUTING.md) and [PROVENANCE.md](PROVENANCE.md).
 
 ## License
 
