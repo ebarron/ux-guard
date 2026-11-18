@@ -36,7 +36,7 @@ import {
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PACKAGE_NAME = '@edjbarron/ux-guard';
-const PACKAGE_VERSION = '0.6.0';
+const PACKAGE_VERSION = '0.6.1';
 const TYPESCRIPT_VERSION = '5.9.3';
 const RELEASE_WORKFLOW_PATH = '.github/workflows/release.yml';
 const EXPORTS = {

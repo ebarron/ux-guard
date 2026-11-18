@@ -1,6 +1,6 @@
 {
   "name": "@edjbarron/ux-guard",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "type": "module",
   "description": "Deterministic UX checks and advisory evidence, verdict, and recommendation reports.",
   "license": "Apache-2.0",
