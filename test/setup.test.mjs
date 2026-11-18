@@ -95,8 +95,18 @@ export const Page = () => <main>{colors.join(',')}</main>;
   const documented = await run(project(source));
   assert.equal(documented.code, 0);
   assert.equal(documented.err, '');
-  const readme = readFileSync(join(PACKAGE_ROOT, 'README.md'), 'utf8')
-    .replaceAll('\r\n', '\n');
+  const readmeSource = readFileSync(join(PACKAGE_ROOT, 'README.md'), 'utf8');
+  const approvedOpener = readFileSync(
+    join(PACKAGE_ROOT, 'test/fixtures/approved-readme-opener.md'),
+    'utf8',
+  );
+  const sourceGettingStartedAt = readmeSource.indexOf('## Getting started');
+  assert.equal(
+    readmeSource.slice(0, sourceGettingStartedAt),
+    approvedOpener,
+    'README opener must stay byte-for-byte aligned with reviewed commit 2c9d257',
+  );
+  const readme = readmeSource.replaceAll('\r\n', '\n');
   const gettingStartedAt = readme.indexOf('## Getting started');
   const dailyUseAt = readme.indexOf('## Daily use');
   const safetyAt = readme.indexOf('## Safety and approval');
