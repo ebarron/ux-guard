@@ -92,7 +92,8 @@ export const Page = () => <main>{colors.join(',')}</main>;
   const documented = await run(project(source));
   assert.equal(documented.code, 0);
   assert.equal(documented.err, '');
-  const readme = readFileSync(join(PACKAGE_ROOT, 'README.md'), 'utf8');
+  const readme = readFileSync(join(PACKAGE_ROOT, 'README.md'), 'utf8')
+    .replaceAll('\r\n', '\n');
   const transcript = readme.match(
     /`setup` inspects non-test UI source and reports what it could establish:\n\n```text\n(?<text>[\s\S]*?)```\n/,
   );
