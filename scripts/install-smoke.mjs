@@ -32,27 +32,33 @@ const EXPORTS = [
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const temporaryRoot = mkdtempSync(join(tmpdir(), 'ux-guard-install-'));
+const suppliedTarball = process.argv[2]
+  ? resolve(process.cwd(), process.argv[2])
+  : null;
 
 try {
-  const packageDirectory = join(temporaryRoot, 'package');
   const consumerDirectory = join(temporaryRoot, 'consumer');
-  mkdirSync(packageDirectory);
   mkdirSync(consumerDirectory);
 
-  const [packed] = JSON.parse(
-    execFileSync(
-      npm,
-      [
-        'pack',
-        '--json',
-        '--ignore-scripts',
-        '--pack-destination',
-        packageDirectory,
-      ],
-      { cwd: ROOT, encoding: 'utf8' },
-    ),
-  );
-  const tarball = join(packageDirectory, packed.filename);
+  let tarball = suppliedTarball;
+  if (tarball === null) {
+    const packageDirectory = join(temporaryRoot, 'package');
+    mkdirSync(packageDirectory);
+    const [packed] = JSON.parse(
+      execFileSync(
+        npm,
+        [
+          'pack',
+          '--json',
+          '--ignore-scripts',
+          '--pack-destination',
+          packageDirectory,
+        ],
+        { cwd: ROOT, encoding: 'utf8' },
+      ),
+    );
+    tarball = join(packageDirectory, packed.filename);
+  }
   assert.ok(existsSync(tarball), 'npm pack did not create the tarball');
 
   writeFileSync(
@@ -83,6 +89,16 @@ try {
   );
   assert.equal(installed.name, PACKAGE_NAME);
   assert.equal(installed.version, PACKAGE_VERSION);
+  for (const packagedPath of [
+    'README.md',
+    'docs/cli-reference.md',
+    'skills/ux-guard/SKILL.md',
+  ]) {
+    assert.ok(
+      existsSync(join(installedRoot, packagedPath)),
+      `npm package is missing ${packagedPath}`,
+    );
+  }
 
   const importProgram = [
     ...EXPORTS.map(

@@ -38,6 +38,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PACKAGE_NAME = '@edjbarron/ux-guard';
 const PACKAGE_VERSION = '0.6.0';
 const TYPESCRIPT_VERSION = '5.9.3';
+const RELEASE_WORKFLOW_PATH = '.github/workflows/release.yml';
 const EXPORTS = {
   './authoritative': './lib/authoritative.mjs',
   './baselines': './lib/baselines.mjs',
@@ -111,7 +112,7 @@ function verifyMetadata() {
   const pkg = readJson('package.json');
   assert.equal(pkg.name, PACKAGE_NAME);
   assert.equal(pkg.version, PACKAGE_VERSION);
-  assert.equal(pkg.private, true);
+  assert.equal(Object.hasOwn(pkg, 'private'), false);
   assert.equal(pkg.license, 'Apache-2.0');
   assert.deepEqual(pkg.engines, { node: '>=22' });
   assert.deepEqual(pkg.bin, { 'ux-guard': 'bin/ux-guard.mjs' });
@@ -126,7 +127,10 @@ function verifyMetadata() {
   ]);
   assert.deepEqual(pkg.exports, EXPORTS);
   assert.deepEqual(pkg.dependencies, { typescript: TYPESCRIPT_VERSION });
-  assert.equal(Object.hasOwn(pkg, 'publishConfig'), false);
+  assert.deepEqual(pkg.publishConfig, {
+    access: 'public',
+    provenance: true,
+  });
 
   const lock = readJson('package-lock.json');
   assert.equal(lock.name, PACKAGE_NAME);
@@ -234,8 +238,58 @@ function verifyPackedBoundary() {
   );
 }
 
+function verifyReleaseWorkflow() {
+  const source = readFileSync(join(ROOT, RELEASE_WORKFLOW_PATH), 'utf8');
+  assert.match(source, /^on:\n  workflow_dispatch:\n/m);
+  assert.doesNotMatch(source, /^\s+(?:push|pull_request|schedule):/m);
+  assert.match(source, /^\s+environment: npm$/m);
+  for (const permission of [
+    'attestations: write',
+    'contents: write',
+    'id-token: write',
+  ]) {
+    assert.match(source, new RegExp(`^\\s+${permission}$`, 'm'));
+  }
+  for (const command of [
+    'npm ci --ignore-scripts',
+    'npm run check:hygiene',
+    'npm run check:test-catalog',
+    'npm run check:package',
+    'npm test',
+    'npm run test:install',
+    'npm publish "$TARBALL" --provenance --access public',
+    'gh release create "$TAG"',
+    'gh release edit "$TAG" --draft=false --latest',
+  ]) {
+    assert.ok(source.includes(command), `release workflow is missing: ${command}`);
+  }
+  assert.match(source, /sha256sum/);
+  assert.match(source, /npm sbom --sbom-format cyclonedx/);
+  assert.match(source, /subject-path:/);
+  assert.match(source, /sbom-path:/);
+  assert.match(source, /github\.ref == 'refs\/heads\/main'/);
+  assert.match(source, /release already exists/);
+  assert.match(source, /tag already exists/);
+  assert.match(source, /package version already exists/);
+  assert.match(source, /unset NODE_AUTH_TOKEN NPM_TOKEN/);
+  assert.doesNotMatch(source, /_authToken|secrets\./);
+
+  const actionLines = source
+    .split(/\r?\n/)
+    .filter((line) => /^\s*uses:/.test(line));
+  assert.ok(actionLines.length >= 5);
+  for (const line of actionLines) {
+    assert.match(
+      line,
+      /^\s*uses: actions\/(?:attest|checkout|setup-node)@[a-f0-9]{40} # v\d/,
+      `release action is not pinned to a reviewed commit: ${line}`,
+    );
+  }
+}
+
 verifyMetadata();
 verifyVersions();
 verifyRepositoryBoundary();
 verifyPackedBoundary();
+verifyReleaseWorkflow();
 process.stdout.write('ux-guard package boundary: clean\n');
