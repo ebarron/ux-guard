@@ -57,7 +57,7 @@ export function scanProductStrings(root = PACKAGE_ROOT) {
   const findings = [];
   for (const path of sourceFiles(root)) {
     const text = readFileSync(path, 'utf8');
-    const lines = text.split('\n');
+    const lines = text.split(/\r?\n/);
     for (const [index, line] of lines.entries()) {
       for (const [rule, pattern] of DISALLOWED_STRINGS) {
         if (

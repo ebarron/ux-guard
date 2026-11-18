@@ -12,7 +12,7 @@ test('public-source hygiene rejects consumer and framework assumptions', () => {
   mkdirSync(join(root, 'lib'));
   writeFileSync(
     join(root, 'NOTICE'),
-    `ux-guard\nCopyright 2026 ${['Net', 'App'].join('')}, Inc.\n`,
+    `ux-guard\r\nCopyright 2026 ${['Net', 'App'].join('')}, Inc.\r\n`,
   );
   mkdirSync(join(root, '.github/workflows'), { recursive: true });
   const sourceCommit = 'a'.repeat(40);
@@ -22,11 +22,11 @@ test('public-source hygiene rejects consumer and framework assumptions', () => {
       `- Source repository: https://github.com/${['Net', 'App'].join('')}/${['har', 'vest'].join('')}-ui`,
       `- Source commit: \`${sourceCommit}\``,
       '',
-    ].join('\n'),
+    ].join('\r\n'),
   );
   writeFileSync(
     join(root, '.github/workflows/ci.yml'),
-    `    uses: actions/checkout@${'b'.repeat(40)} # v1.2.3\n`,
+    `    uses: actions/checkout@${'b'.repeat(40)} # v1.2.3\r\n`,
   );
   assert.deepEqual(scanProductStrings(root), []);
   writeFileSync(
