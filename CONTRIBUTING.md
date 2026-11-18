@@ -10,6 +10,7 @@ Use Node.js 22 or newer and npm:
 ```sh
 npm ci --ignore-scripts
 npm run check:hygiene
+npm run check:test-catalog
 npm run check:package
 npm test
 npm pack --dry-run --ignore-scripts
@@ -20,6 +21,9 @@ Changes to policy behavior need positive, negative, and failure-path tests.
 Changes to schemas, exported paths, or the tool version must update the package
 consistency checks and changelog together. Keep fixtures synthetic and free of
 consumer-specific names, links, identifiers, hashes, and screenshots.
+When a test is added, removed, or renamed, update
+[the test suite catalog](docs/test-suite.md); the catalog check compares its
+file groups and names with test discovery.
 
 Do not add a reusable workflow action or a privileged browser runner. Execution
 authority and enforcement remain consumer responsibilities.

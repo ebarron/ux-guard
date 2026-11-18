@@ -5,6 +5,12 @@ not guaranteed before 1.0.
 
 ## [Unreleased]
 
+### Documentation
+
+- Reworked the README around user outcomes, verified adoption, result
+  interpretation, daily usage, trust boundaries, and contributor diagnostics.
+- Added a synchronized catalog describing all 100 generic tests.
+
 ## [0.6.0] - 2026-11-17
 
 ### Added

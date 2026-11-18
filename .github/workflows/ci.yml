@@ -31,6 +31,7 @@ jobs:
 
       - run: npm ci --ignore-scripts
       - run: npm run check:hygiene
+      - run: npm run check:test-catalog
       - run: npm run check:package
       - run: npm test
       - run: npm pack --dry-run --ignore-scripts
