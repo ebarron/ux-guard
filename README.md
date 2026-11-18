@@ -132,7 +132,7 @@ The package exposes eleven explicit module subpaths:
 - `@edjbarron/ux-guard/verdicts`
 
 TypeScript `5.9.3` is an exact runtime dependency. The ux-guard tool version
-remains `0.6.0`, and existing public schema versions are unchanged.
+is `0.6.1`, and existing public schema versions are unchanged.
 
 ## Development
 

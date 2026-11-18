@@ -38,6 +38,11 @@ checksums, and publishes with npm provenance. That same tarball, its manifest,
 SBOM, checksums, and GitHub/Sigstore attestation bundles are attached to an
 immutable GitHub release.
 
+Version `0.6.0` was produced by the temporary bootstrap path used to establish
+the npm package. Version `0.6.1` is the first permanent OIDC-only release
+through `.github/workflows/release.yml`; it supersedes the bootstrap artifact
+without functional CLI or schema changes.
+
 ## Original Git blob manifest
 
 The identifiers below are Git blob object IDs from the source commit.

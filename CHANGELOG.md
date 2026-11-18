@@ -5,6 +5,18 @@ not guaranteed before 1.0.
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-18
+
+### Changed
+
+- No functional CLI or schema changes.
+
+### Distribution
+
+- First permanent OIDC-only release through `.github/workflows/release.yml` and
+  the protected `npm` environment, validating tokenless trusted publishing.
+- Supersedes the `0.6.0` bootstrap artifact.
+
 ## [0.6.0] - 2026-11-17
 
 ### Added
@@ -40,4 +52,5 @@ not guaranteed before 1.0.
   a CycloneDX SBOM, package manifest, and GitHub/Sigstore attestations.
 
 [Unreleased]: https://github.com/ebarron/ux-guard/commits/main
+[0.6.1]: https://github.com/ebarron/ux-guard/releases/tag/v0.6.1
 [0.6.0]: https://github.com/ebarron/ux-guard/releases/tag/v0.6.0

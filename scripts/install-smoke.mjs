@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PACKAGE_NAME = '@edjbarron/ux-guard';
-const PACKAGE_VERSION = '0.6.0';
+const PACKAGE_VERSION = '0.6.1';
 const EXPORTS = [
   'authoritative',
   'baselines',
