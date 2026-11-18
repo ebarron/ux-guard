@@ -23,6 +23,21 @@ end-to-end journeys, browser startup and configuration, trusted runners,
 integration tests, workflow orchestration, acceptance classifiers, reports,
 private links, and product documentation are excluded.
 
+## Release provenance
+
+Public npm releases are built only by `.github/workflows/release.yml` from the
+verified head of protected `main`. The manual workflow requires the requested
+version, `package.json`, changelog entry, and `v` tag to agree; it fails if the
+npm version, tag, or release already exists.
+
+The protected `npm` environment gates the publishing job. npm authentication
+uses GitHub OIDC trusted publishing without a stored publish token. The job
+repeats all checks with lifecycle scripts disabled, builds one exact tarball,
+tests that tarball in a clean project, generates a CycloneDX SBOM and SHA-256
+checksums, and publishes with npm provenance. That same tarball, its manifest,
+SBOM, checksums, and GitHub/Sigstore attestation bundles are attached to an
+immutable GitHub release.
+
 ## Original Git blob manifest
 
 The identifiers below are Git blob object IDs from the source commit.

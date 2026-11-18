@@ -2,8 +2,9 @@
 
 ## Supported versions
 
-Before the first package release, security fixes target the latest commit on
-`main`. No npm version is currently supported or distributed.
+Published `0.6.x` npm releases receive security fixes until a newer supported
+minor release is available. Before publication, fixes target the latest commit
+on `main`.
 
 ## Reporting
 
@@ -23,4 +24,5 @@ untrusted input.
 
 Reports can contain repository paths and source-derived names. Treat generated
 output according to the consumer repository's sensitivity. Consumers should
-install GitHub source using a reviewed full commit SHA.
+install the public npm package and verify its registry provenance and GitHub
+release checksums and attestations.

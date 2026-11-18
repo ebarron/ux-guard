@@ -1,7 +1,6 @@
 {
   "name": "@edjbarron/ux-guard",
   "version": "0.6.0",
-  "private": true,
   "type": "module",
   "description": "Deterministic UX checks and advisory evidence, verdict, and recommendation reports.",
   "license": "Apache-2.0",
@@ -14,6 +13,10 @@
     "url": "https://github.com/ebarron/ux-guard/issues"
   },
   "homepage": "https://github.com/ebarron/ux-guard#readme",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "files": [
     "bin",
     "docs",

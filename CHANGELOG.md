@@ -5,11 +5,20 @@ not guaranteed before 1.0.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-17
+
 ### Added
 
 - Added the safe `setup` first-run command with human and JSON results,
   no-overwrite setup proposals, and explicit approval boundaries.
 - Added the distributable `skills/ux-guard` project skill.
+- Fresh public-source extraction of the generic CLI, library modules, and 100
+  generic tests.
+- Eleven explicit module subpath exports and the `ux-guard` executable.
+- Deterministic journey, evidence, visual, baseline, target, and advisory
+  report contracts.
+- Public-source hygiene, package-boundary verification, install smoke testing,
+  multi-platform compatibility testing, and code scanning.
 
 ### Changed
 
@@ -23,21 +32,12 @@ not guaranteed before 1.0.
   interpretation, and daily use.
 - Expanded the synchronized catalog to describe all 111 generic tests.
 
-## [0.6.0] - 2026-11-17
-
-### Added
-
-- Fresh public-source extraction of the generic CLI, library modules, and 100
-  generic tests.
-- Eleven explicit module subpath exports and the `ux-guard` executable.
-- Deterministic journey, evidence, visual, baseline, target, and advisory
-  report contracts.
-- Public-source hygiene, package-boundary verification, install smoke testing,
-  multi-platform compatibility testing, and code scanning.
-
 ### Distribution
 
-- Source only. This version is not published to npm and has no release or tag.
+- Releases use the protected `npm` environment and npm OIDC trusted publishing
+  with provenance; no long-lived npm publish token is stored.
+- The immutable GitHub release carries the exact npm tarball, SHA-256 checksums,
+  a CycloneDX SBOM, package manifest, and GitHub/Sigstore attestations.
 
 [Unreleased]: https://github.com/ebarron/ux-guard/commits/main
-[0.6.0]: https://github.com/ebarron/ux-guard/commits/main
+[0.6.0]: https://github.com/ebarron/ux-guard/releases/tag/v0.6.0
