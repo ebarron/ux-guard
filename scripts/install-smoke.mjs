@@ -92,6 +92,7 @@ try {
   for (const packagedPath of [
     'README.md',
     'docs/cli-reference.md',
+    'docs/scoring-and-backslide.md',
     'skills/ux-guard/SKILL.md',
   ]) {
     assert.ok(
@@ -141,7 +142,17 @@ try {
   assert.equal(setup.status, 0);
   assert.equal(setup.stderr, '');
   assert.match(setup.stdout, /^ux-guard setup/m);
-  assert.match(setup.stdout, /Saved ux-guard\/setup-proposal\.json/);
+  assert.match(setup.stdout, /^Good$/m);
+  assert.match(setup.stdout, /^Needs attention$/m);
+  assert.match(setup.stdout, /^Unknown$/m);
+  assert.match(setup.stdout, /^Next steps$/m);
+  assert.match(setup.stdout, /Help me define ux-guard use cases for this repo/);
+  assert.match(
+    setup.stdout,
+    /Use ux-guard\/setup-proposal\.json as a supporting review file; it contains observed source roots, component and icon usage, pattern counts, and unresolved policy choices/,
+  );
+  assert.match(setup.stdout, /No policy, baseline, waiver, or enforcement was activated/);
+  assert.doesNotMatch(setup.stdout, /^Setup proposal$/m);
   const setupProposal = JSON.parse(
     readFileSync(
       join(consumerDirectory, 'ux-guard/setup-proposal.json'),
@@ -159,7 +170,8 @@ try {
   });
   assert.equal(check.error, undefined);
   assert.equal(check.status, 2);
-  assert.match(check.stderr, /review and explicitly activate the setup proposal/);
+  assert.match(check.stderr, /review its findings and supporting file/);
+  assert.match(check.stderr, /explicit human approval/);
 
   const report = spawnSync(npx, ['ux-guard', 'report'], {
     cwd: consumerDirectory,

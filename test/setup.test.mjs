@@ -8,7 +8,7 @@ import {
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { main } from '../lib/cli.mjs';
-import { TYPESCRIPT, capture, tempRepo } from './helpers.mjs';
+import { PACKAGE_ROOT, TYPESCRIPT, capture, tempRepo } from './helpers.mjs';
 
 function project(source = 'export const Page = () => <main><p>Hello</p></main>;\n') {
   return tempRepo({
@@ -37,13 +37,15 @@ test('setup explains insufficient evidence in an empty repository without writin
   assert.equal(result.err, '');
   assert.match(result.out, /No executable UI source evidence was available/);
   assert.match(result.out, /Nothing can be confirmed/);
-  assert.match(result.out, /Not created at ux-guard\/setup-proposal\.json/);
-  assert.match(result.out, /No active policy, reviewed baseline, waiver, or enforcement was created/);
+  assert.match(result.out, /^Next steps$/m);
+  assert.match(result.out, /Add or point ux-guard to a TypeScript UI project/);
+  assert.match(result.out, /No policy, baseline, waiver, or enforcement was activated/);
+  assert.doesNotMatch(result.out, /setup-proposal\.json|styling and pattern issues/);
   assert.equal(existsSync(join(root, 'ux-guard/setup-proposal.json')), false);
   assert.equal(existsSync(join(root, '.uxguard.json')), false);
 });
 
-test('setup gives neutral projects human-readable first results and an unapproved proposal', async () => {
+test('setup tailors next steps and keeps the README transcript exact', async () => {
   const root = project();
   const result = await run(root);
   assert.equal(result.code, 0);
@@ -52,8 +54,22 @@ test('setup gives neutral projects human-readable first results and an unapprove
   assert.match(result.out, /^Good$/m);
   assert.match(result.out, /^Needs attention$/m);
   assert.match(result.out, /^Unknown$/m);
+  assert.match(result.out, /^Next steps$/m);
   assert.match(result.out, /No inline styles were observed/);
-  assert.match(result.out, /Saved ux-guard\/setup-proposal\.json/);
+  assert.match(result.out, /Help me define ux-guard use cases for this repo/);
+  assert.match(
+    result.out,
+    /Use ux-guard\/setup-proposal\.json as a supporting review file; it contains observed source roots, component and icon usage, pattern counts, and unresolved policy choices/,
+  );
+  assert.match(result.out, /Do not activate policy or baseline until a human explicitly approves them/);
+  assert.match(
+    result.out,
+    /Help me review ux-guard\/setup-proposal\.json, decide what should become reviewed ux-guard policy, and prepare the initial baseline; do not activate anything until I explicitly approve it/,
+  );
+  assert.match(result.out, /After human approval and activation, run ux-guard check and ux-guard report/);
+  assert.match(result.out, /No policy, baseline, waiver, or enforcement was activated/);
+  assert.doesNotMatch(result.out, /^Setup proposal$/m);
+  assert.doesNotMatch(result.out, /styling and pattern issues|Review ux-guard's observed/);
   assert.doesNotMatch(result.out, /\bcandidate\b/i);
 
   const proposal = JSON.parse(
@@ -69,6 +85,19 @@ test('setup gives neutral projects human-readable first results and an unapprove
   assert.equal(proposal.observedBaseline.approved, false);
   assert.equal(existsSync(join(root, '.uxguard.json')), false);
   assert.equal(existsSync(join(root, 'ux/patterns-baseline.json')), false);
+
+  const source = `const colors = ['#fff', '#123456', 'rgb(0, 0, 0)'];
+export const Page = () => <main>{colors.join(',')}</main>;
+`;
+  const documented = await run(project(source));
+  assert.equal(documented.code, 0);
+  assert.equal(documented.err, '');
+  const readme = readFileSync(join(PACKAGE_ROOT, 'README.md'), 'utf8');
+  const transcript = readme.match(
+    /`setup` inspects non-test UI source and reports what it could establish:\n\n```text\n(?<text>[\s\S]*?)```\n/,
+  );
+  assert.ok(transcript, 'README needs the setup terminal transcript');
+  assert.equal(documented.out, transcript.groups.text);
 });
 
 test('setup JSON is deterministic, noninteractive, and keeps approval boundaries explicit', async () => {
@@ -99,10 +128,20 @@ test('setup JSON is deterministic, noninteractive, and keeps approval boundaries
     ['inline-style', 'px-literal', 'raw-button', 'hard-coded-color'],
   );
   assert.ok(document.results.unknown.some((item) => item.includes('regression from main')));
+  assert.equal(
+    document.nextAction,
+    [
+      '1. Define the important user workflows and use cases. Agent Skill prompt: "Help me define ux-guard use cases for this repo"',
+      '2. Review the observed styling and pattern issues (inline styles, pixel literals, raw button elements, and hard-coded colors) and decide which are intentional conventions versus UX debt. Agent Skill prompt: "Review ux-guard\'s observed inline styles, pixel literals, raw button elements, and hard-coded colors in this repo and help me decide which are intentional conventions versus UX debt; do not change policy or baselines"',
+      '3. Decide what should become reviewed policy and prepare the initial baseline. Use ux-guard/setup-proposal.json as a supporting review file; it contains observed source roots, component and icon usage, pattern counts, and unresolved policy choices. Do not activate policy or baseline until a human explicitly approves them. Agent Skill prompt: "Help me review ux-guard/setup-proposal.json, decide what should become reviewed ux-guard policy, and prepare the initial baseline; do not activate anything until I explicitly approve it"',
+      '4. After human approval and activation, run ux-guard check and ux-guard report; report will explain any remaining journey evidence gaps.',
+      'No policy, baseline, waiver, or enforcement was activated.',
+    ].join('\n'),
+  );
   assert.equal(JSON.stringify(document).includes('candidate'), false);
 });
 
-test('setup never overwrites an existing proposal or active policy', async () => {
+test('setup never overwrites an existing supporting review file or active policy', async () => {
   const root = project();
   assert.equal((await run(root)).code, 0);
   const path = join(root, 'ux-guard/setup-proposal.json');
@@ -123,10 +162,10 @@ test('setup never overwrites an existing proposal or active policy', async () =>
   assert.equal(existsSync(join(configured, 'ux-guard/setup-proposal.json')), false);
 });
 
-test('setup proposal paths reject traversal and symlink escapes', async () => {
+test('setup supporting review paths reject traversal and symlink escapes', async () => {
   const traversal = await run(project(), '--proposal', '../proposal.json');
   assert.equal(traversal.code, 2);
-  assert.match(traversal.err, /setup proposal path must stay within the repository/);
+  assert.match(traversal.err, /setup review file path must stay within the repository/);
 
   const root = project();
   const outside = tempRepo({});
@@ -153,16 +192,23 @@ test('primary help leads with setup, check, and report while advanced help prese
 
   const setupHelp = capture();
   assert.equal(await main(['setup', '--help'], setupHelp.io), 0);
+  assert.match(setupHelp.out, /suggest tailored next steps/);
+  assert.match(setupHelp.out, /supporting review\s+file records the observed source roots/);
   assert.match(setupHelp.out, /never creates active policy/);
   assert.match(setupHelp.out, /--proposal <path>/);
+
+  const reportHelp = capture();
+  assert.equal(await main(['report', '--help'], reportHelp.io), 0);
+  assert.match(reportHelp.out, /successfully rendered report exits 0/);
+  assert.match(reportHelp.out, /report does not enforce merges/);
 });
 
 test('check and report errors point unconfigured repositories to the safe first step', async () => {
   const root = project();
   const check = capture();
   assert.equal(await main(['--root', root, 'check'], check.io), 2);
-  assert.match(check.err, /review and explicitly activate the setup proposal/);
-  assert.match(check.err, /If no proposal exists, run ux-guard setup/);
+  assert.match(check.err, /run ux-guard setup, review its findings and supporting file/);
+  assert.match(check.err, /explicit human approval/);
 
   const report = capture();
   assert.equal(await main(['--root', root, 'report'], report.io), 2);
