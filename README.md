@@ -11,6 +11,28 @@ It separates four questions that are often blurred together:
 - Are product-owned UX targets being met?
 - What evidence is missing or unexecutable?
 
+## What it does
+
+- Keeps component, control-prop, icon, and styling patterns aligned with the
+  conventions a team reviewed.
+- Detects UX workflow backslide without treating a historical baseline as a
+  declaration that the old experience was good.
+- Measures interaction cost, including clicks, typing, route changes, modal
+  depth, and policy-selected observations.
+- Gives human-facing quality verdicts and actionable recommendations while
+  preserving the underlying evidence.
+- Protects reviewed visual evidence with strict profiles, checkpoint policy,
+  hashes, dimensions, masks, repository boundaries, and no-overwrite
+  promotion.
+- Keeps baseline, target, and policy changes explicit so candidate code cannot
+  silently redefine what it is judged against.
+- Separates UX quality, target attainment, regression, and numerical scores so
+  one signal cannot impersonate another.
+
+ux-guard is consumer-neutral: your repository owns its use-case catalog,
+policy, browser harness, reviewed baselines, targets, artifact locations, and
+CI enforcement decision.
+
 ## Quickstart
 
 Requirements: Node.js 22 or newer, npm, and a TypeScript UI project with JSX or
@@ -93,20 +115,6 @@ configured journey and visual evidence as advisory sections. `report` explains
 configured UX quality, evidence gaps, target attainment, regression, supported
 scores, and recommendations. Report generation requires reviewed journey
 policy; until then, the CLI explains what is missing.
-
-## What ux-guard inspects
-
-- Component libraries, control props, icon libraries, native controls, and
-  styling signals.
-- Reviewed use-case coverage for navigation surfaces.
-- Deterministic journey completion and interaction evidence.
-- Product-owned requirements and interaction targets.
-- Reviewed current-state journey and visual comparisons.
-
-The repository owns its catalog, browser harness, policy, targets, baselines,
-artifact retention, and enforcement decisions. Candidate code cannot be made
-trustworthy merely by generating a favorable report, so trusted-base mode
-loads reviewed policy and comparison evidence from an explicit commit.
 
 ## Reference
 
