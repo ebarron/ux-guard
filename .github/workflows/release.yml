@@ -318,7 +318,7 @@ jobs:
         run: |
           set -euo pipefail
           ACTUAL_INTEGRITY=""
-          for attempt in {1..12}; do
+          for attempt in {1..120}; do
             set +e
             ACTUAL_INTEGRITY="$(npm view "$EXPECTED_PACKAGE@$RELEASE_VERSION" dist.integrity 2>/dev/null)"
             STATUS=$?
@@ -346,7 +346,15 @@ jobs:
           EDIT_STATUS=$?
           set -e
           if test "$EDIT_STATUS" -ne 0; then
-            gh release verify "$TAG" --repo "$GITHUB_REPOSITORY"
+            echo "::warning::release edit returned $EDIT_STATUS; checking whether the immutable release completed"
           fi
-          gh release verify "$TAG" --repo "$GITHUB_REPOSITORY"
+          RELEASE_VERIFIED=false
+          for attempt in {1..60}; do
+            if gh release verify "$TAG" --repo "$GITHUB_REPOSITORY"; then
+              RELEASE_VERIFIED=true
+              break
+            fi
+            sleep 5
+          done
+          test "$RELEASE_VERIFIED" = "true"
           gh release verify-asset "$TAG" "$TARBALL" --repo "$GITHUB_REPOSITORY"
