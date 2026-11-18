@@ -6,9 +6,10 @@ import { PACKAGE_ROOT } from './helpers.mjs';
 
 const path = join(PACKAGE_ROOT, 'skills/ux-guard/SKILL.md');
 const source = readFileSync(path, 'utf8');
+const portableSource = source.replaceAll('\r\n', '\n');
 
 test('ux-guard skill metadata is concise, valid, and trigger-rich', () => {
-  const frontmatter = source.match(/^---\n(?<body>[\s\S]+?)\n---\n/);
+  const frontmatter = portableSource.match(/^---\n(?<body>[\s\S]+?)\n---\n/);
   assert.ok(frontmatter, 'skill needs YAML frontmatter');
   assert.match(frontmatter.groups.body, /^name: ux-guard$/m);
   const description = frontmatter.groups.body.match(/^description: (?<value>.+)$/m);
