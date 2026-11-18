@@ -37,10 +37,8 @@ jobs:
           node-version: 24.15.0
           package-manager-cache: false
 
-      - name: Use an OIDC-capable npm CLI
-        run: |
-          npm install --global npm@12.2.3 --ignore-scripts
-          test "$(npm --version)" = "12.2.3"
+      - name: Verify the bundled OIDC-capable npm CLI
+        run: test "$(npm --version)" = "11.12.1"
 
       - name: Fail closed unless this is verified main
         env:
@@ -124,10 +122,8 @@ jobs:
           node-version: 24.15.0
           package-manager-cache: false
 
-      - name: Use an OIDC-capable npm CLI
-        run: |
-          npm install --global npm@12.2.3 --ignore-scripts
-          test "$(npm --version)" = "12.2.3"
+      - name: Verify the bundled OIDC-capable npm CLI
+        run: test "$(npm --version)" = "11.12.1"
 
       - name: Revalidate release identity and availability
         env:
@@ -213,7 +209,9 @@ jobs:
           subject-path: ${{ steps.package.outputs.tarball }}
 
       - name: Preserve provenance attestation bundle
-        run: cp "${{ steps.provenance.outputs.bundle-path }}" "dist/ux-guard-$RELEASE_VERSION.provenance.sigstore.json"
+        env:
+          BUNDLE_PATH: ${{ steps.provenance.outputs.bundle-path }}
+        run: cp "$BUNDLE_PATH" "dist/ux-guard-$RELEASE_VERSION.provenance.sigstore.json"
 
       - name: Attest release tarball SBOM
         id: sbom-attestation
@@ -223,9 +221,11 @@ jobs:
           sbom-path: ${{ steps.package.outputs.sbom }}
 
       - name: Preserve SBOM attestation bundle and checksums
+        env:
+          BUNDLE_PATH: ${{ steps.sbom-attestation.outputs.bundle-path }}
         run: |
           set -euo pipefail
-          cp "${{ steps.sbom-attestation.outputs.bundle-path }}" "dist/ux-guard-$RELEASE_VERSION.sbom.sigstore.json"
+          cp "$BUNDLE_PATH" "dist/ux-guard-$RELEASE_VERSION.sbom.sigstore.json"
           (
             cd dist
             sha256sum \
@@ -306,10 +306,11 @@ jobs:
       - name: Publish exact tarball to npm with OIDC provenance
         id: publish
         continue-on-error: true
+        env:
+          TARBALL: ${{ steps.package.outputs.tarball }}
         run: |
           set -euo pipefail
           unset NODE_AUTH_TOKEN NPM_TOKEN
-          TARBALL="${{ steps.package.outputs.tarball }}"
           npm publish "$TARBALL" --provenance --access public
 
       - name: Confirm npm accepted the exact tarball
@@ -339,6 +340,7 @@ jobs:
       - name: Publish the immutable GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
+          TARBALL: ${{ steps.package.outputs.tarball }}
         run: |
           set -euo pipefail
           TAG="v$RELEASE_VERSION"
@@ -350,4 +352,4 @@ jobs:
             gh release verify "$TAG" --repo "$GITHUB_REPOSITORY"
           fi
           gh release verify "$TAG" --repo "$GITHUB_REPOSITORY"
-          gh release verify-asset "$TAG" "${{ steps.package.outputs.tarball }}" --repo "$GITHUB_REPOSITORY"
+          gh release verify-asset "$TAG" "$TARBALL" --repo "$GITHUB_REPOSITORY"
