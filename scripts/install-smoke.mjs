@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -35,6 +36,100 @@ const temporaryRoot = mkdtempSync(join(tmpdir(), 'ux-guard-install-'));
 const suppliedTarball = process.argv[2]
   ? resolve(process.cwd(), process.argv[2])
   : null;
+
+function listConsumerFiles(directory, prefix = '') {
+  return readdirSync(join(directory, prefix), { withFileTypes: true })
+    .filter((entry) => entry.name !== 'node_modules')
+    .flatMap((entry) => {
+      const path = prefix ? `${prefix}/${entry.name}` : entry.name;
+      return entry.isDirectory() ? listConsumerFiles(directory, path) : [path];
+    })
+    .sort();
+}
+
+// smokeReviewApp proves the installed package serves its bundled review app
+// from node_modules on loopback and stops when the app closes.
+async function smokeReviewApp(consumerDirectory) {
+  writeFileSync(
+    join(consumerDirectory, 'ux-guard/use-case-draft.json'),
+    `${JSON.stringify(
+      {
+        kind: 'ux-guard-use-case-draft',
+        version: 1,
+        approval: { status: 'unapproved', activatesCatalog: false },
+        source: { catalog: 'ux/use-cases.yml', navigation: ['src/Page.tsx'] },
+        workflows: [
+          {
+            id: 'view-page',
+            title: 'View the page',
+            sources: ['src/Page.tsx'],
+            classification: { disposition: 'unresolved' },
+          },
+        ],
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  const prepare = spawnSync(npx, ['ux-guard', 'review', 'prepare'], {
+    cwd: consumerDirectory,
+    encoding: 'utf8',
+    shell: false,
+  });
+  assert.equal(prepare.status, 0, prepare.stderr);
+  assert.ok(existsSync(join(consumerDirectory, 'ux-guard/use-case-candidate.json')));
+
+  const bin = join(
+    consumerDirectory,
+    'node_modules',
+    '@edjbarron',
+    'ux-guard',
+    'bin',
+    'ux-guard.mjs',
+  );
+  const child = spawn(process.execPath, [bin, 'review', '--no-open'], {
+    cwd: consumerDirectory,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  let output = '';
+  child.stdout.on('data', (chunk) => (output += chunk));
+  child.stderr.on('data', (chunk) => (output += chunk));
+  const exited = new Promise((resolveExit) => child.on('exit', resolveExit));
+  try {
+    let url = null;
+    for (let attempt = 0; attempt < 200 && url === null; attempt += 1) {
+      url = /Open (http:\/\/127\.0\.0\.1:\d+)\/#token=([0-9a-f]+)/.exec(output);
+      if (url === null) await new Promise((wait) => setTimeout(wait, 50));
+    }
+    assert.ok(url, `review did not print its address:\n${output}`);
+    const [, origin, token] = url;
+    for (const [path, type] of [
+      ['/', /text\/html/],
+      ['/app.js', /text\/javascript/],
+      ['/app.css', /text\/css/],
+    ]) {
+      const response = await fetch(`${origin}${path}`);
+      assert.equal(response.status, 200, path);
+      assert.match(response.headers.get('content-type'), type);
+    }
+    const state = await fetch(`${origin}/api/state`, {
+      headers: { 'X-UX-Guard-Token': token },
+    });
+    assert.equal(state.status, 200);
+    assert.equal((await state.json()).state.summary.unresolved, 1);
+    const closed = await fetch(`${origin}/api/close`, {
+      method: 'POST',
+      headers: { 'X-UX-Guard-Token': token, 'Content-Type': 'application/json' },
+      body: '{}',
+    });
+    assert.equal(closed.status, 200);
+    assert.equal(await exited, 0);
+  } finally {
+    child.kill();
+  }
+  assert.equal(existsSync(join(consumerDirectory, 'ux-guard/use-case-review.json')), false);
+  assert.equal(existsSync(join(consumerDirectory, 'ux/use-cases.yml')), false);
+}
 
 try {
   const consumerDirectory = join(temporaryRoot, 'consumer');
@@ -93,6 +188,10 @@ try {
     'README.md',
     'docs/cli-reference.md',
     'docs/scoring-and-backslide.md',
+    'docs/use-case-review.md',
+    'lib/review-app/index.html',
+    'lib/review-app/app.js',
+    'lib/review-app/app.css',
     'skills/ux-guard/SKILL.md',
   ]) {
     assert.ok(
@@ -182,6 +281,20 @@ try {
   assert.equal(report.status, 2);
   assert.match(report.stderr, /Reporting remains unavailable/);
 
+  const beforeReview = listConsumerFiles(consumerDirectory);
+  const review = spawnSync(npx, ['ux-guard', 'review'], {
+    cwd: consumerDirectory,
+    encoding: 'utf8',
+    shell: false,
+  });
+  assert.equal(review.error, undefined);
+  assert.equal(review.status, 0, review.stderr);
+  assert.match(review.stdout, /No use-case candidate was found/);
+  assert.match(review.stdout, /Help me discover and review the important use cases in this repository\./);
+  assert.match(review.stdout, /Nothing was written\./);
+  assert.deepEqual(listConsumerFiles(consumerDirectory), beforeReview);
+  await smokeReviewApp(consumerDirectory);
+
   const bin = join(
     consumerDirectory,
     'node_modules',
@@ -198,7 +311,7 @@ try {
   assert.equal(result.status, 2);
   assert.match(result.stderr, /usage: ux-guard <command>/);
   process.stdout.write(
-    'ux-guard packed install, bin, and clean Quickstart smoke test: passed\n',
+    'ux-guard packed install, bin, Quickstart, and review app smoke test: passed\n',
   );
 } finally {
   rmSync(temporaryRoot, { recursive: true, force: true });

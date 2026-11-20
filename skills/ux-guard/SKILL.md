@@ -1,6 +1,6 @@
 ---
 name: ux-guard
-description: Uses ux-guard when users ask to set up ux-guard, audit UX, explain ux-guard results, detect UX regression from main, recommend UX improvements, or prepare a reviewed policy or baseline.
+description: Uses ux-guard when users ask to set up ux-guard, audit UX, explain ux-guard results, detect UX regression from main, recommend UX improvements, prepare a reviewed policy or baseline, or discover and review use cases, continue a use-case review, open the ux-guard review app, or resolve unmapped workflows and exclusions.
 ---
 
 # ux-guard
@@ -82,6 +82,42 @@ Offer these directly usable onboarding prompts:
 - `Inspect ux-guard's setup findings and ux-guard/setup-proposal.json. Show me the observed controls, control props, components, icons, and styling patterns. Help me classify each as an approved convention, tolerated existing debt to record in the baseline, or a non-approved pattern to fix. Do not change policy or baselines.`
 - `Prepare ux-guard's baseline review work for the approved use cases and UI conventions. Use only real repository evidence: the setup proposal for static patterns and the existing browser harness for configured journeys or visuals. Show what each proposed baseline would tolerate, keep every artifact unapproved, and stop before promotion.`
 - `These exact ux-guard review artifacts and resulting files are approved: [list paths]. Activate only those approvals. Run ux-guard check and, if journey reporting is configured, ux-guard report. Explain the first result as good, needs attention, and unknown. Separate enforceable policy findings from advisory UX findings. Do not add waivers or change policy or baselines.`
+
+## Review use cases
+
+Use this flow when the user asks to discover or review use cases, continue a
+use-case review, open the review app, or resolve unmapped workflows and
+exclusions. The package's `docs/use-case-review.md` defines the draft format.
+
+1. Run the local `review` command in JSON mode to learn the current state.
+   It writes nothing.
+2. If it reports `no-candidate` and no draft exists, assess the repository:
+   read the navigation sources and UI workflows, then write
+   `ux-guard/use-case-draft.json` with surfaces, workflows, proposed use cases
+   grouped by user outcome, and a proposed mapping or exclusion for each item.
+   Mark anything with unclear ownership or scope as `unresolved` and record
+   open questions; never guess to make coverage look complete. Never write
+   repository identity or hashes yourself.
+3. Run the local `review prepare`. It refuses to overwrite an existing
+   candidate; report that instead of choosing another path silently.
+4. If the candidate is stale, explain which assessed files changed and ask
+   before refreshing the draft and preparing a new candidate.
+5. Start the local `review` command (for example `npx ux-guard review`) and
+   give the user the printed local address. Keep it running while they review.
+6. Explain the proposals in plain language: what each use case lets a person
+   do, why it was proposed, which surfaces and workflows it covers, and what
+   remains unresolved or blocked. Present choices; let the user decide.
+
+The user makes every decision in the app. Do not edit
+`ux-guard/use-case-review.json` or the preview to approve, map, or exclude on
+the user's behalf. When asked to resolve unmapped workflows, explain each
+option and its consequence, and leave unknowns unresolved rather than
+inventing exclusions.
+
+The agent must stop before adoption or promotion. Never run `review adopt`,
+check in the catalog, change inventory, or enable enforcement without
+explicit human approval naming the exact command. Saving in the app is not
+approval. Adoption, check-in, and enforcement are separate decisions.
 
 ## Audit and explain
 

@@ -140,7 +140,7 @@ export const Page = () => <main>{colors.join(',')}</main>;
   );
   assert.match(
     readme,
-    /\[Enumerated 111-test catalog and verification commands\]\(docs\/test-suite\.md\)/,
+    /\[Enumerated 147-test catalog and verification commands\]\(docs\/test-suite\.md\)/,
   );
   const introduction = '`setup` inspects non-test UI source and reports what it could establish:';
   const introductionAt = readme.indexOf(introduction);

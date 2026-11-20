@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <title>ux-guard use-case review</title>
+    <link rel="stylesheet" href="/app.css">
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to review content</a>
+    <header class="app-header">
+      <div>
+        <h1>Use-case review</h1>
+        <p id="repo-line" class="muted">Loading the local review…</p>
+      </div>
+      <div class="header-actions">
+        <span id="save-state" class="save-state">Not saved</span>
+        <button id="save" type="button" class="primary" aria-keyshortcuts="Control+S Meta+S" disabled>Save review</button>
+        <button id="close" type="button">Close review</button>
+      </div>
+    </header>
+    <p class="notice"><strong>Saving records review decisions only.</strong> It does not approve, adopt, check in, or enforce anything. Changing the active catalog is a separate owner command.</p>
+    <div id="identity-banner" class="banner" hidden></div>
+    <div id="error" class="banner danger" role="alert" hidden></div>
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+    <nav aria-label="Review sections">
+      <div class="tabs" role="tablist" aria-label="Review sections">
+        <button type="button" role="tab" id="tab-summary" aria-controls="panel-summary" aria-selected="true">Summary</button>
+        <button type="button" role="tab" id="tab-use-cases" aria-controls="panel-use-cases" aria-selected="false" tabindex="-1">Use cases</button>
+        <button type="button" role="tab" id="tab-coverage" aria-controls="panel-coverage" aria-selected="false" tabindex="-1">Surfaces and workflows</button>
+        <button type="button" role="tab" id="tab-preview" aria-controls="panel-preview" aria-selected="false" tabindex="-1">Catalog preview</button>
+      </div>
+    </nav>
+    <main id="main" tabindex="-1">
+      <section id="panel-summary" role="tabpanel" aria-labelledby="tab-summary" tabindex="0"></section>
+      <section id="panel-use-cases" role="tabpanel" aria-labelledby="tab-use-cases" tabindex="0" hidden></section>
+      <section id="panel-coverage" role="tabpanel" aria-labelledby="tab-coverage" tabindex="0" hidden></section>
+      <section id="panel-preview" role="tabpanel" aria-labelledby="tab-preview" tabindex="0" hidden></section>
+    </main>
+  </body>
+</html>

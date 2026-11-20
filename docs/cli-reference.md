@@ -8,6 +8,7 @@ The primary workflow is:
 
 ```sh
 ux-guard setup
+ux-guard review
 ux-guard check
 ux-guard report
 ```
@@ -57,6 +58,26 @@ markdown` for a review document or `--format json` for another renderer.
 
 `report` requires configured journey policy. Missing or unexecutable evidence
 stays visible as incomplete or unavailable.
+
+### `review`
+
+Opens a local app for reviewing proposed use cases. See
+[use-case review](use-case-review.md) for the workflow, draft format, and
+safety model.
+
+- `review` starts the app on `127.0.0.1`. Without a candidate, it explains
+  what is missing, prints an agent prompt, and writes nothing.
+- `review --format json` reports review status without starting the app.
+- `review prepare` validates `ux-guard/use-case-draft.json` and writes an
+  unapproved, identity-stamped candidate without overwriting.
+- `review adopt` writes the active catalog after explicit owner approval. It
+  requires `--reviewer`, `--reviewed-at`, `--rationale`, a saved, current,
+  conflict-free review, and `--replace-catalog-sha256` when a catalog exists.
+
+Saving in the app writes only `ux-guard/use-case-review.json` and
+`ux-guard/use-case-catalog.preview.yml`, both unapproved. No review command
+changes configuration, baselines, targets, waivers, inventory, or
+enforcement.
 
 ### Trusted-base comparisons
 

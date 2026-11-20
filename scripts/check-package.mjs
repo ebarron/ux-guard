@@ -64,6 +64,11 @@ const LIBRARY_FILES = [
   'observations.mjs',
   'patterns.mjs',
   'playwright.mjs',
+  'review-app',
+  'review-command.mjs',
+  'review-server.mjs',
+  'review-store.mjs',
+  'review.mjs',
   'run-contract.mjs',
   'shards.mjs',
   'targets.mjs',
@@ -71,15 +76,19 @@ const LIBRARY_FILES = [
   'visuals.mjs',
   'yaml.mjs',
 ];
+const REVIEW_APP_FILES = ['app.css', 'app.js', 'index.html'];
 const PACKED_FILES = [
   'docs/cli-reference.md',
   'docs/scoring-and-backslide.md',
   'docs/test-suite.md',
+  'docs/use-case-review-design.md',
+  'docs/use-case-review.md',
   'LICENSE',
   'NOTICE',
   'README.md',
   'bin/ux-guard.mjs',
-  ...LIBRARY_FILES.map((name) => `lib/${name}`),
+  ...LIBRARY_FILES.filter((name) => name !== 'review-app').map((name) => `lib/${name}`),
+  ...REVIEW_APP_FILES.map((name) => `lib/review-app/${name}`),
   'package.json',
   'skills/ux-guard/SKILL.md',
 ].sort();
@@ -212,15 +221,16 @@ function verifyRepositoryBoundary() {
     'consumer configuration must remain excluded',
   );
   assert.deepEqual(readdirSync(join(ROOT, 'lib')).sort(), LIBRARY_FILES);
+  assert.deepEqual(readdirSync(join(ROOT, 'lib', 'review-app')).sort(), REVIEW_APP_FILES);
 
   const testFiles = readdirSync(join(ROOT, 'test'))
     .filter((name) => name.endsWith('.test.mjs'))
     .sort();
   const testCount = testFiles.reduce((count, name) => {
     const source = readFileSync(join(ROOT, 'test', name), 'utf8');
-    return count + [...source.matchAll(/\btest\(/g)].length;
+    return count + [...source.matchAll(/^test\(/gm)].length;
   }, 0);
-  assert.equal(testCount, 111);
+  assert.equal(testCount, 147);
 }
 
 function verifyPackedBoundary() {

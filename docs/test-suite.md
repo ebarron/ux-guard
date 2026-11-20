@@ -1,6 +1,6 @@
 # Test suite catalog
 
-ux-guard has exactly 111 generic tests. This catalog was built from the test
+ux-guard has exactly 147 generic tests. This catalog was built from the test
 names discovered by Node's test runner, not from a feature checklist. Run
 `npm test` to execute them and `npm run check:test-catalog` to verify that this
 page still matches the test files and names.
@@ -102,6 +102,57 @@ application.
 - `visual capture rejects an unreviewed viewport` — Proves screenshots cannot be accepted under dimensions outside the reviewed profile.
 - `visual capture rejects an unreviewed browser version` — Proves browser identity must match the reviewed visual profile.
 - `visual capture requires every reviewed mask to match` — Proves visual masks are valid only when every reviewed selector resolves.
+
+## `test/review-app.test.mjs` (6 tests)
+
+- `the review page has landmarks, a skip link, live regions, and a labelled tab pattern` — Proves the review page exposes a skip link, header, navigation, and main landmarks, polite status and alert regions, and tabs that control labelled panels.
+- `every rendered control is labelled and every reference resolves across views` — Proves every input, select, and textarea in every use-case and coverage view has a label, every ARIA or label reference names an element that exists, and no empty placeholder renders as visible text.
+- `tabs and lists follow the arrow, Home, and End keyboard pattern` — Proves keyboard users can move between tabs and through inbox items across outcome groups without a pointer.
+- `decisions keep focus through re-rendering and Ctrl+S saves with an unapproved announcement` — Proves focus survives server re-evaluation and the keyboard save announces that the saved review is unapproved and nothing was adopted.
+- `an exclusion without a rationale is flagged in place and stays unresolved` — Proves excluding an item demands its own rationale, marks the field invalid with a linked message, and keeps the item unresolved.
+- `the stylesheet provides visible focus, reduced motion, and dark mode without external assets` — Proves the app ships visible focus, reduced-motion, and dark-mode styles and loads no external resources or HTML-injection paths.
+
+## `test/review-cli.test.mjs` (6 tests)
+
+- `review without a candidate explains what is missing, offers the agent prompt, and writes nothing` — Proves the default command explains the missing assessment, prints the copyable agent prompt in text and JSON, and leaves the repository untouched.
+- `an explicit candidate path that does not exist is an input error with guidance` — Proves a named but missing candidate fails with exit 2 and a next step instead of falling back silently.
+- `review --format json reports status without starting the app or writing files` — Proves automation can read review progress and the adoption command without a server or any write.
+- `prepare and adopt run end to end and leave configuration and baselines unchanged` — Proves the CLI prepares once without overwriting, refuses adoption without approval details or the exact catalog hash, and adopts without touching configuration or baselines.
+- `review options are rejected outside review and incompatible options are rejected inside it` — Proves review-only flags cannot leak into other commands and each review subcommand rejects options it does not use.
+- `review help and documentation describe the unapproved workflow with the exact agent prompts` — Proves help states the loopback, unapproved boundary and that the README and review guide carry the exact agent prompts the CLI prints.
+
+## `test/review-server.test.mjs` (5 tests)
+
+- `the review server binds only to loopback and serves self-contained assets with strict headers` — Proves the app is bound to 127.0.0.1, never answers on other interfaces, and serves assets with a restrictive content security policy and no external URLs.
+- `the review API requires the session token and a loopback Host header` — Proves API calls without the session token or with a rebinding Host header are refused.
+- `the review API rejects cross-origin, cross-site, non-JSON, and oversized requests` — Proves cross-origin and cross-site requests, wrong content types, oversized or malformed bodies, unknown methods and paths, and approval claims are rejected.
+- `evaluate never writes files and save writes only the review and its preview` — Proves evaluation is read-only, saving writes exactly the unapproved review and preview, and a replayed stale revision is refused.
+- `closing from the app stops the server and the review command exits cleanly` — Proves Close review ends the local process and the command reports that saved decisions remain unapproved.
+
+## `test/review-store.test.mjs` (8 tests)
+
+- `prepare stamps repository identity and input hashes without overwriting` — Proves prepare records root commits, the current commit, and hashes of every assessed file, and never overwrites a candidate.
+- `prepare rejects forged identity, missing or escaping inputs, and policy destinations` — Proves agent-authored identity, missing or escaping source paths, and candidate paths that name active policy are refused.
+- `stale candidates are detected from changed inputs and from a different repository` — Proves edited or deleted assessed files and a foreign repository mark the candidate stale while unrelated commits do not.
+- `saves are atomic, revisioned, and refuse concurrent or foreign overwrites` — Proves saves replace files atomically, advance the revision, reject a stale revision, and never overwrite a preview ux-guard did not generate.
+- `review artifact paths cannot target active policy, escape the repository, or follow symbolic links` — Proves review, preview, and candidate paths are confined to safe repository-local destinations.
+- `a review recorded against another candidate is refused instead of silently reapplied` — Proves decisions bound to a different candidate hash are not applied to a new assessment.
+- `adoption requires approval details and a saved, current, conflict-free review with an exact preview` — Proves adoption refuses missing approval details, unsaved or stale reviews, blocking issues, and a preview that differs from the saved decisions.
+- `adoption replaces an existing catalog only with its exact current hash and changes nothing else` — Proves catalog replacement requires the current hash, an unconfigured repository needs an explicit catalog path, and nothing outside the catalog changes.
+
+## `test/review.test.mjs` (11 tests)
+
+- `use-case candidates validate strictly and reject approval, forged identity, and unsafe paths` — Proves drafts and candidates reject unknown fields, approval claims, agent-written identity, and unsafe paths.
+- `review decisions round-trip canonically and reject unknown proposals, subjects, and actions` — Proves saved decisions serialize deterministically and cannot reference proposals, subjects, or actions that do not exist.
+- `approve and revise add complete entries while incomplete proposals stay out with reasons` — Proves accepted proposals enter the catalog only when complete and missing fields are reported as blocking reasons.
+- `reject and split leave dependent mappings unresolved until they are remapped` — Proves removing or dividing a proposal does not silently keep its surfaces covered.
+- `merge folds starts and mappings into an accepted target and rejects unaccepted targets` — Proves merged proposals contribute their starts and coverage to an accepted use case and cannot merge into an undecided one.
+- `added use cases and split parts must be complete and cannot collide with the catalog` — Proves owner-added entries and split parts are validated and cannot duplicate active or proposed identifiers.
+- `unresolved and exclusion accounting keeps unknowns visible instead of reporting success` — Proves coverage totals count unresolved items and rationale-free exclusions as unresolved rather than covered.
+- `mapped surfaces become catalog starts that the catalog check accepts` — Proves surface mappings become catalog starts that the existing catalog validation accepts.
+- `the generated catalog diff is exact, deterministic, and keeps the active entries` — Proves the preview diff matches the generated catalog exactly and preserves existing entries and inventory.
+- `catalog YAML emission round-trips through the strict parser or refuses to write` — Proves generated YAML parses back to the same catalog or is refused before writing.
+- `unified diffs use minimal hunks with three lines of context` — Proves diff hunks are minimal and correctly positioned for additions, removals, and new files.
 
 ## `test/run-contract.test.mjs` (5 tests)
 

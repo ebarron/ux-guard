@@ -70,7 +70,14 @@ export function scanProductStrings(root = PACKAGE_ROOT) {
         }
       }
       for (const match of line.matchAll(URL_PATTERN)) {
-        const host = new URL(match[0]).hostname;
+        if (match[0].includes('${')) continue;
+        let host;
+        try {
+          host = new URL(match[0]).hostname;
+        } catch {
+          findings.push(finding(root, path, index, 'invalid-link'));
+          continue;
+        }
         if (!ALLOWED_LINK_HOSTS.has(host) && !host.endsWith('.invalid')) {
           findings.push(finding(root, path, index, 'non-public-link'));
         }

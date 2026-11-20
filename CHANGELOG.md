@@ -5,6 +5,25 @@ not guaranteed before 1.0.
 
 ## [Unreleased]
 
+### Added
+
+- Added `ux-guard review`, a local use-case review app bound to `127.0.0.1`
+  with no external assets or telemetry. Owners approve, revise, reject, merge,
+  split, or add use cases, map every surface and workflow to a use case or an
+  explicit exclusion, see unresolved decisions and coverage totals, and
+  preview the exact catalog diff. Saving records an unapproved review.
+- Added `ux-guard review prepare`, which validates an assessment draft and
+  stamps an unapproved candidate with repository and source identity so stale
+  candidates are detected.
+- Added `ux-guard review adopt`, the separate owner command that writes the
+  catalog from a saved, current, conflict-free review with recorded approval
+  and an exact-hash replacement guard. It leaves configuration, inventory,
+  baselines, targets, waivers, and enforcement unchanged.
+- Added use-case review guidance and prompts to the bundled skill,
+  `docs/use-case-review.md`, and `docs/use-case-review-design.md`.
+- Added 36 tests for the review model, storage safety, local-server security,
+  CLI, and keyboard and labelling behavior.
+
 ## [0.6.1] - 2026-11-18
 
 ### Changed

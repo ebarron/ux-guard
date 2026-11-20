@@ -160,6 +160,44 @@ recommendations. `report` requires reviewed journey policy and a configured
 journey report path; until those exist, use `check` and complete the missing
 setup.
 
+## Review use cases
+
+The use-case catalog says which user workflows matter. To build or extend it,
+ask your agent:
+
+> Help me discover and review the important use cases in this repository. Open
+> ux-guard’s local review experience, explain the proposals in plain language,
+> and do not activate policy without my explicit approval.
+
+The agent drafts an assessment, `ux-guard review prepare` stamps it with
+repository identity, and `ux-guard review` opens a local app:
+
+```sh
+npx ux-guard review
+```
+
+In the app, approve, revise, reject, merge, or split proposed use cases, add
+missed ones, map every navigation surface and workflow to a use case or an
+explicit exclusion, and preview the exact catalog diff. Saving records an
+unapproved review; it changes no active policy. Unknowns stay unresolved
+instead of being counted as covered.
+
+Later, resume with:
+
+> Continue my ux-guard use-case review.
+
+> Open the ux-guard review app for this repository.
+
+> Help me resolve the remaining unmapped workflows and exclusions. Do not
+> approve or activate anything.
+
+Changing the active catalog is a separate owner command, `ux-guard review
+adopt`, which requires a saved, current, conflict-free review and prints who
+approved it. Checking in the catalog and enforcement remain separate
+decisions. The app binds only to `127.0.0.1`, loads no external assets, and
+sends no telemetry. See [use-case review](docs/use-case-review.md) and its
+[design](docs/use-case-review-design.md).
+
 ## Reading a result
 
 - **Policy finding:** current code conflicts with a reviewed catalog or static
@@ -269,8 +307,10 @@ gives the next safe action instead of reporting success.
 ## Reference
 
 - [CLI reference and advanced maintainer commands](docs/cli-reference.md)
+- [Use-case review](docs/use-case-review.md)
+- [Use-case review design](docs/use-case-review-design.md)
 - [Scoring and backslide semantics](docs/scoring-and-backslide.md)
-- [Enumerated 111-test catalog and verification commands](docs/test-suite.md)
+- [Enumerated 147-test catalog and verification commands](docs/test-suite.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 - [Source provenance](PROVENANCE.md)

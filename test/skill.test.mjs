@@ -21,6 +21,10 @@ test('ux-guard skill metadata is concise, valid, and trigger-rich', () => {
     'regression from main',
     'recommend UX improvements',
     'policy or baseline',
+    'review use cases',
+    'continue a use-case review',
+    'open the ux-guard review app',
+    'unmapped workflows and exclusions',
   ]) {
     assert.match(description.groups.value, new RegExp(trigger, 'i'));
   }
@@ -45,6 +49,11 @@ test('ux-guard skill preserves approval, evidence, and production-UI guardrails'
     'Never infer approval from frequency',
     'real browser harness',
     'leave it unknown; never fabricate',
+    'never guess to make coverage look complete',
+    'Never write repository identity or hashes yourself',
+    'Do not edit `ux-guard/use-case-review.json`',
+    'Never run `review adopt`',
+    'Saving in the app is not approval',
   ]) {
     assert.match(normalized, new RegExp(guardrail, 'i'));
   }
