@@ -1,6 +1,6 @@
 # Test suite catalog
 
-ux-guard has exactly 154 generic tests. This catalog was built from the test
+ux-guard has exactly 155 generic tests. This catalog was built from the test
 names discovered by Node's test runner, not from a feature checklist. Run
 `npm test` to execute them and `npm run check:test-catalog` to verify that this
 page still matches the test files and names.
@@ -104,7 +104,7 @@ application.
 - `visual capture rejects an unreviewed browser version` — Proves browser identity must match the reviewed visual profile.
 - `visual capture requires every reviewed mask to match` — Proves visual masks are valid only when every reviewed selector resolves.
 
-## `test/review-app.test.mjs` (10 tests)
+## `test/review-app.test.mjs` (11 tests)
 
 - `the review page has landmarks, a skip link, live regions, and a labelled tab pattern` — Proves the review page exposes a skip link, header, navigation, and main landmarks, polite status and alert regions, and tabs that control labelled panels.
 - `every rendered control is labelled and every reference resolves across views` — Proves every input, select, and textarea in every use-case and coverage view has a label, every ARIA or label reference names an element that exists, and no empty placeholder renders as visible text.
@@ -114,6 +114,7 @@ application.
 - `merge requires a searchable explicit target and previews what will move` — Proves merge remains incomplete until a searchable eligible target is chosen and exposes target status, mapping counts, movement details, duplicate handling, keyboard focus, and labels.
 - `decisions keep focus through re-rendering and Ctrl+S saves with an unapproved announcement` — Proves focus survives server re-evaluation and the keyboard save announces that the saved review is unapproved and nothing was adopted.
 - `dirty reviews warn on browser unload and require confirmation before close` — Proves unsaved state triggers browser protection, Close requires an explicit discard confirmation, cancellation focuses Save, and confirmation closes without saving.
+- `closing cancels queued and in-flight evaluation before a new review session` — Proves closing or tearing down a review invalidates delayed evaluation work so an old session cannot send its token to or update a later session.
 - `an exclusion without a rationale is flagged in place and stays unresolved` — Proves excluding an item demands its own rationale, marks the field invalid with a linked message, and keeps the item unresolved.
 - `the stylesheet provides visible focus, reduced motion, and dark mode without external assets` — Proves the app ships visible focus, reduced-motion, and dark-mode styles and loads no external resources or HTML-injection paths.
 

@@ -10,7 +10,7 @@ const ts = require('typescript');
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const TEST_ROOT = join(ROOT, 'test');
 const CATALOG_PATH = join(ROOT, 'docs', 'test-suite.md');
-const EXPECTED_COUNT = 154;
+const EXPECTED_COUNT = 155;
 const GROUP_PATTERN = /^## `(?<path>test\/[^`]+\.test\.mjs)` \((?<count>\d+) tests?\)$/;
 const ENTRY_PATTERN = /^- `(?<name>.+)` — (?<description>.+)$/;
 

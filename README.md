@@ -320,7 +320,7 @@ gives the next safe action instead of reporting success.
 - [Use-case review](docs/use-case-review.md)
 - [Use-case review design](docs/use-case-review-design.md)
 - [Scoring and backslide semantics](docs/scoring-and-backslide.md)
-- [Enumerated 154-test catalog and verification commands](docs/test-suite.md)
+- [Enumerated 155-test catalog and verification commands](docs/test-suite.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 - [Source provenance](PROVENANCE.md)

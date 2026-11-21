@@ -251,18 +251,26 @@ function createDocument(html) {
 
 let runs = 0;
 
-async function loadApp(t, { root = prepared(reviewRepo()).root } = {}) {
+async function loadApp(
+  t,
+  {
+    root = prepared(reviewRepo()).root,
+    timers = { setTimeout, clearTimeout },
+    wrapFetch = (request) => request,
+  } = {},
+) {
   const server = await startReviewServer((await import('./review-helpers.mjs')).context(root));
   const document = createDocument(readFileSync(join(APP, 'index.html'), 'utf8'));
   const storage = new Map();
   const windowListeners = new Map();
   const confirmCalls = [];
+  const request = (path, init) => nodeFetch(`${server.origin}${path}`, init);
   const window = {
     location: { hash: `#token=${server.token}`, pathname: '/' },
     history: { replaceState: (_, __, path) => (window.location.hash = path.includes('#') ? path.slice(path.indexOf('#')) : '') },
     sessionStorage: { getItem: (key) => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, String(value)) },
-    setTimeout: (...args) => setTimeout(...args),
-    clearTimeout: (handle) => clearTimeout(handle),
+    setTimeout: (...args) => timers.setTimeout(...args),
+    clearTimeout: (handle) => timers.clearTimeout(handle),
     confirm: (message) => {
       confirmCalls.push(message);
       return true;
@@ -282,13 +290,14 @@ async function loadApp(t, { root = prepared(reviewRepo()).root } = {}) {
     window,
     Node: FakeNode,
     CSS: { escape: (value) => String(value).replace(/["\\]/g, '\\$&') },
-    fetch: (path, init) => nodeFetch(`${server.origin}${path}`, init),
+    fetch: wrapFetch(request),
   };
   for (const [key, value] of Object.entries(globals)) {
     saved[key] = Object.getOwnPropertyDescriptor(globalThis, key);
     Object.defineProperty(globalThis, key, { value, configurable: true, writable: true });
   }
   t.after(async () => {
+    window.dispatchEvent(makeEvent('pagehide'));
     for (const [key, descriptor] of Object.entries(saved)) {
       if (descriptor) Object.defineProperty(globalThis, key, descriptor);
       else delete globalThis[key];
@@ -311,6 +320,29 @@ async function until(condition, message = 'condition') {
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
   assert.fail(`timed out waiting for ${message}`);
+}
+
+function controlledTimers() {
+  const handles = [];
+  return {
+    setTimeout(callback, delay) {
+      const handle = { callback, delay, cleared: false };
+      handles.push(handle);
+      return handle;
+    },
+    clearTimeout(handle) {
+      if (handle) handle.cleared = true;
+    },
+    pending(delay) {
+      const handle = handles.findLast((candidate) => candidate.delay === delay && !candidate.cleared);
+      assert.ok(handle, `expected a pending ${delay} ms timer`);
+      return handle;
+    },
+    run(handle) {
+      handle.cleared = true;
+      return handle.callback();
+    },
+  };
 }
 
 function key(target, name, extra = {}) {
@@ -629,6 +661,73 @@ test('dirty reviews warn on browser unload and require confirmation before close
   await until(() => /review is closed/i.test(document.body.textContent), 'confirmed close');
   assert.equal(confirmCalls.length, 2);
   assert.equal(document.activeElement.id, 'main');
+});
+
+test('closing cancels queued and in-flight evaluation before a new review session', async (t) => {
+  const timers = controlledTimers();
+  let releaseEvaluation;
+  let evaluationReadyResolve;
+  const evaluationReady = new Promise((resolve) => {
+    evaluationReadyResolve = resolve;
+  });
+  let evaluationSignal;
+  const { document } = await loadApp(t, {
+    timers,
+    wrapFetch: (request) => async (path, init) => {
+      if (path !== '/api/evaluate') return request(path, init);
+      evaluationSignal = init.signal;
+      const response = await request(path, init);
+      const body = await response.json();
+      return new Promise((resolve) => {
+        releaseEvaluation = () =>
+          resolve({
+            ok: response.ok,
+            status: response.status,
+            statusText: response.statusText,
+            json: async () => body,
+          });
+        evaluationReadyResolve();
+      });
+    },
+  });
+
+  const approve = document.getElementById('decision-approve');
+  approve.checked = true;
+  approve.dispatchEvent(makeEvent('change'));
+  const activeEvaluation = timers.run(timers.pending(250));
+  await evaluationReady;
+
+  const pending = document.getElementById('decision-pending');
+  pending.checked = true;
+  pending.dispatchEvent(makeEvent('change'));
+  const queuedEvaluation = timers.pending(250);
+  document.getElementById('close').click();
+  await until(() => /review is closed/i.test(document.body.textContent), 'confirmed close');
+  assert.equal(evaluationSignal.aborted, true, 'closing aborts the active evaluation request');
+  assert.equal(queuedEvaluation.cleared, true, 'closing clears the queued evaluation');
+
+  const nextDocument = createDocument(readFileSync(join(APP, 'index.html'), 'utf8'));
+  let nextSessionRequests = 0;
+  Object.defineProperty(globalThis, 'document', {
+    value: nextDocument,
+    configurable: true,
+    writable: true,
+  });
+  Object.defineProperty(globalThis, 'fetch', {
+    value: async () => {
+      nextSessionRequests += 1;
+      throw new Error('a stale evaluation reached the new session');
+    },
+    configurable: true,
+    writable: true,
+  });
+
+  await queuedEvaluation.callback();
+  releaseEvaluation();
+  await activeEvaluation;
+  assert.equal(nextSessionRequests, 0);
+  assert.equal(nextDocument.getElementById('panel-summary').childNodes.length, 0);
+  assert.equal(nextDocument.getElementById('error').hidden, true);
 });
 
 test('an exclusion without a rationale is flagged in place and stays unresolved', async (t) => {
