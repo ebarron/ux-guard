@@ -60,6 +60,13 @@ test('prepare stamps repository identity and input hashes without overwriting', 
   );
   assert.equal(result.inputs, 3);
   assert.deepEqual(result.notAssessed, []);
+  assert.deepEqual(result.incompleteProposals, [
+    {
+      id: 'archive-record',
+      missing: ['goal', 'success'],
+      missingLabels: ['Goal', 'Success outcome'],
+    },
+  ]);
 
   const original = readFileSync(join(root, DEFAULT_REVIEW_PATHS.candidate), 'utf8');
   assert.throws(
@@ -208,8 +215,11 @@ test('adoption requires approval details and a saved, current, conflict-free rev
   assert.throws(() => adoptReview(unsaved, { ...APPROVAL, rationale: '' }), /single-line --rationale/);
 
   const pending = prepared(reviewRepo({ git: true }));
-  saveReview(pending, { ...freshReview(pending), proposals: { 'archive-record': { action: 'approve' } } });
-  assert.throws(() => adoptReview(context(pending.root), { ...APPROVAL, replaceSha256: 'x' }), /blocking issue/);
+  assert.throws(
+    () => saveReview(pending, { ...freshReview(pending), proposals: { 'archive-record': { action: 'approve' } } }),
+    /cannot be approved as proposed until Goal, Success outcome/,
+  );
+  assert.equal(pending.reviewSha256, null);
 
   saveReview(unsaved, decided(unsaved));
   writeFileSync(join(root, DEFAULT_REVIEW_PATHS.preview), `${PREVIEW_MARKER}\nedited by hand\n`);

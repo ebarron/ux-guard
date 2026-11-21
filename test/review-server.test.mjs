@@ -158,6 +158,45 @@ test('the review API rejects cross-origin, cross-site, non-JSON, and oversized r
   assert.match(invalid.json.error, /must be unapproved/);
 });
 
+test('the review API preserves undecided drafts and rejects stale incomplete approval choices', async (t) => {
+  const { ctx, server } = await started();
+  t.after(() => server.close());
+  const draft = {
+    ...ctx.review,
+    proposals: {
+      'archive-record': {
+        action: 'pending',
+        fields: {
+          goal: 'Remove an old record from active work.',
+          success: 'The record is archived.',
+        },
+      },
+    },
+  };
+  const evaluated = await api(server, '/api/evaluate', { review: draft });
+  assert.equal(evaluated.status, 200);
+  const archive = evaluated.json.state.useCases.find(({ id }) => id === 'archive-record');
+  assert.equal(archive.action, 'pending');
+  assert.equal(archive.draftCompleteness.complete, true);
+  assert.deepEqual(archive.changedFields, ['goal', 'success']);
+
+  const invalidOriginal = await api(server, '/api/evaluate', {
+    review: { ...ctx.review, proposals: { 'archive-record': { action: 'approve' } } },
+  });
+  assert.equal(invalidOriginal.status, 400);
+  assert.match(invalidOriginal.json.error, /cannot be approved as proposed until Goal, Success outcome/);
+
+  const invalidRevision = await api(server, '/api/save', {
+    review: {
+      ...ctx.review,
+      proposals: { 'archive-record': { action: 'revise', fields: { goal: 'Archive it.' } } },
+    },
+  });
+  assert.equal(invalidRevision.status, 400);
+  assert.match(invalidRevision.json.error, /cannot approve the revised proposal until Success outcome/);
+  assert.equal(ctx.reviewSha256, null);
+});
+
 test('evaluate never writes files and save writes only the review and its preview', async (t) => {
   const { ctx, server } = await started();
   t.after(() => server.close());
@@ -172,6 +211,8 @@ test('evaluate never writes files and save writes only the review and its previe
   const saved = await api(server, '/api/save', { review: decisions });
   assert.equal(saved.status, 200);
   assert.equal(saved.json.saved.revision, 1);
+  assert.match(saved.json.saved.savedAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+  assert.equal(saved.json.saved.path, DEFAULT_REVIEW_PATHS.review);
   assert.deepEqual(
     listFiles(ctx.root).filter((path) => !before.includes(path)),
     [DEFAULT_REVIEW_PATHS.preview, DEFAULT_REVIEW_PATHS.review],

@@ -1,6 +1,6 @@
 # Test suite catalog
 
-ux-guard has exactly 147 generic tests. This catalog was built from the test
+ux-guard has exactly 155 generic tests. This catalog was built from the test
 names discovered by Node's test runner, not from a feature checklist. Run
 `npm test` to execute them and `npm run check:test-catalog` to verify that this
 page still matches the test files and names.
@@ -23,11 +23,12 @@ application.
 - `policy, schema, browser, and approval incompatibilities never become comparisons` — Proves incompatible evidence is reported as unavailable instead of being treated as a valid regression comparison.
 - `owner target v2 validates desired requirements and metric policy separately from baseline tolerances` — Proves desired targets remain a distinct reviewed contract from current-state regression tolerances.
 
-## `test/catalog.test.mjs` (4 tests)
+## `test/catalog.test.mjs` (5 tests)
 
 - `reads navigation surfaces from nested object literals` — Proves catalog discovery recognizes navigation entries nested in source object literals.
 - `reports navigation surfaces that no use case covers` — Proves a route missing from the use-case catalog is surfaced as unmapped.
 - `accepts assistant starts and deep routes under a surface` — Proves assistant entry points and deeper routes can satisfy a catalogued surface mapping.
+- `accepts use cases without owner or entry points and reports their binding as unknown` — Proves definition validity does not depend on governance metadata or implementation bindings, while legacy owner metadata remains readable and unbound coverage stays explicit.
 - `rejects malformed use cases` — Proves invalid catalog records fail validation instead of being partially accepted.
 
 ## `test/cli.test.mjs` (16 tests)
@@ -103,12 +104,17 @@ application.
 - `visual capture rejects an unreviewed browser version` — Proves browser identity must match the reviewed visual profile.
 - `visual capture requires every reviewed mask to match` — Proves visual masks are valid only when every reviewed selector resolves.
 
-## `test/review-app.test.mjs` (6 tests)
+## `test/review-app.test.mjs` (11 tests)
 
 - `the review page has landmarks, a skip link, live regions, and a labelled tab pattern` — Proves the review page exposes a skip link, header, navigation, and main landmarks, polite status and alert regions, and tabs that control labelled panels.
 - `every rendered control is labelled and every reference resolves across views` — Proves every input, select, and textarea in every use-case and coverage view has a label, every ARIA or label reference names an element that exists, and no empty placeholder renders as visible text.
 - `tabs and lists follow the arrow, Home, and End keyboard pattern` — Proves keyboard users can move between tabs and through inbox items across outcome groups without a pointer.
+- `undecided definition edits persist as drafts and require explicit revised approval` — Proves incomplete proposals expose field-specific focus guidance, definition edits remain undecided when saved, and accepting the completed revision requires a separate action.
+- `draft reset and original approval require explicit discard without losing edits silently` — Proves reviewers can revert a draft and that approving the source proposal cannot discard draft changes without confirmation.
+- `merge requires a searchable explicit target and previews what will move` — Proves merge remains incomplete until a searchable eligible target is chosen and exposes target status, mapping counts, movement details, duplicate handling, keyboard focus, and labels.
 - `decisions keep focus through re-rendering and Ctrl+S saves with an unapproved announcement` — Proves focus survives server re-evaluation and the keyboard save announces that the saved review is unapproved and nothing was adopted.
+- `dirty reviews warn on browser unload and require confirmation before close` — Proves unsaved state triggers browser protection, Close requires an explicit discard confirmation, cancellation focuses Save, and confirmation closes without saving.
+- `closing cancels queued and in-flight evaluation before a new review session` — Proves closing or tearing down a review invalidates delayed evaluation work so an old session cannot send its token to or update a later session.
 - `an exclusion without a rationale is flagged in place and stays unresolved` — Proves excluding an item demands its own rationale, marks the field invalid with a linked message, and keeps the item unresolved.
 - `the stylesheet provides visible focus, reduced motion, and dark mode without external assets` — Proves the app ships visible focus, reduced-motion, and dark-mode styles and loads no external resources or HTML-injection paths.
 
@@ -121,11 +127,12 @@ application.
 - `review options are rejected outside review and incompatible options are rejected inside it` — Proves review-only flags cannot leak into other commands and each review subcommand rejects options it does not use.
 - `review help and documentation describe the unapproved workflow with the exact agent prompts` — Proves help states the loopback, unapproved boundary and that the README and review guide carry the exact agent prompts the CLI prints.
 
-## `test/review-server.test.mjs` (5 tests)
+## `test/review-server.test.mjs` (6 tests)
 
 - `the review server binds only to loopback and serves self-contained assets with strict headers` — Proves the app is bound to 127.0.0.1, never answers on other interfaces, and serves assets with a restrictive content security policy and no external URLs.
 - `the review API requires the session token and a loopback Host header` — Proves API calls without the session token or with a rebinding Host header are refused.
 - `the review API rejects cross-origin, cross-site, non-JSON, and oversized requests` — Proves cross-origin and cross-site requests, wrong content types, oversized or malformed bodies, unknown methods and paths, and approval claims are rejected.
+- `the review API preserves undecided drafts and rejects stale incomplete approval choices` — Proves server evaluation accepts draft fields without approval while refusing incomplete original or revised approval payloads without writing.
 - `evaluate never writes files and save writes only the review and its preview` — Proves evaluation is read-only, saving writes exactly the unapproved review and preview, and a replayed stale revision is refused.
 - `closing from the app stops the server and the review command exits cleanly` — Proves Close review ends the local process and the command reports that saved decisions remain unapproved.
 
@@ -140,10 +147,11 @@ application.
 - `adoption requires approval details and a saved, current, conflict-free review with an exact preview` — Proves adoption refuses missing approval details, unsaved or stale reviews, blocking issues, and a preview that differs from the saved decisions.
 - `adoption replaces an existing catalog only with its exact current hash and changes nothing else` — Proves catalog replacement requires the current hash, an unconfigured repository needs an explicit catalog path, and nothing outside the catalog changes.
 
-## `test/review.test.mjs` (11 tests)
+## `test/review.test.mjs` (12 tests)
 
 - `use-case candidates validate strictly and reject approval, forged identity, and unsafe paths` — Proves drafts and candidates reject unknown fields, approval claims, agent-written identity, and unsafe paths.
 - `review decisions round-trip canonically and reject unknown proposals, subjects, and actions` — Proves saved decisions serialize deterministically and cannot reference proposals, subjects, or actions that do not exist.
+- `draft revisions remain undecided until explicitly accepted and incomplete approvals are rejected` — Proves pending field edits affect the draft without catalog inclusion, explicit revised approval can accept a complete draft, and incomplete approval choices fail semantic validation.
 - `approve and revise add complete entries while incomplete proposals stay out with reasons` — Proves accepted proposals enter the catalog only when complete and missing fields are reported as blocking reasons.
 - `reject and split leave dependent mappings unresolved until they are remapped` — Proves removing or dividing a proposal does not silently keep its surfaces covered.
 - `merge folds starts and mappings into an accepted target and rejects unaccepted targets` — Proves merged proposals contribute their starts and coverage to an accepted use case and cannot merge into an undecided one.

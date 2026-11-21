@@ -119,6 +119,7 @@ h4 {
 
 .header-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
 }
@@ -126,6 +127,21 @@ h4 {
 .save-state {
   color: var(--muted);
   font-size: 0.9rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 6px;
+}
+
+.save-state.unsaved {
+  color: var(--warn-text);
+  background: var(--warn-bg);
+  border: 2px solid currentColor;
+  font-weight: 700;
+}
+
+.save-state.saved {
+  color: var(--ok-text);
+  background: var(--ok-bg);
+  font-weight: 700;
 }
 
 button {
@@ -168,8 +184,14 @@ button.link {
   text-decoration: underline;
 }
 
+button.link.inline {
+  display: inline;
+  padding: 0;
+}
+
 .notice,
 .banner,
+.save-confirmation,
 .status {
   margin: 0.5rem 1.5rem;
 }
@@ -185,6 +207,15 @@ button.link {
   padding: 0.6rem 0.9rem;
   border-radius: 6px;
   border: 1px solid var(--border);
+}
+
+.save-confirmation {
+  padding: 0.8rem 1rem;
+  border: 2px solid var(--ok-text);
+  border-radius: 6px;
+  background: var(--ok-bg);
+  color: var(--ok-text);
+  font-weight: 600;
 }
 
 .banner.danger {
@@ -494,6 +525,74 @@ legend {
 
 .radio .hint {
   grid-column: 2;
+}
+
+.radio .unavailable {
+  color: var(--danger-text);
+}
+
+.decision-guidance {
+  display: block;
+  margin-top: 0.15rem;
+}
+
+.draft-revision,
+.merge-picker,
+.merge-preview {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.draft-revision.pending {
+  border: 2px solid var(--warn-text);
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}
+
+.draft-revision h4,
+.merge-picker h4,
+.merge-preview h4 {
+  margin: 0 0 0.4rem;
+}
+
+.merge-picker > label {
+  display: block;
+  font-weight: 600;
+}
+
+.merge-picker > input {
+  width: 100%;
+}
+
+.merge-targets {
+  list-style: none;
+  padding: 0;
+  max-height: 24rem;
+  overflow: auto;
+}
+
+.merge-targets li {
+  margin: 0.4rem 0;
+}
+
+.merge-target {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  text-align: left;
+}
+
+.merge-target[aria-pressed="true"] {
+  border: 2px solid var(--accent);
+  box-shadow: inset 4px 0 0 var(--accent);
+}
+
+.merge-targets li.unavailable {
+  opacity: 0.75;
 }
 
 .field {

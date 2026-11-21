@@ -16,12 +16,13 @@
         <p id="repo-line" class="muted">Loading the local review…</p>
       </div>
       <div class="header-actions">
-        <span id="save-state" class="save-state">Not saved</span>
+        <span id="save-state" class="save-state" role="status" aria-live="polite">Not saved</span>
         <button id="save" type="button" class="primary" aria-keyshortcuts="Control+S Meta+S" disabled>Save review</button>
         <button id="close" type="button">Close review</button>
       </div>
     </header>
     <p class="notice"><strong>Saving records review decisions only.</strong> It does not approve, adopt, check in, or enforce anything. Changing the active catalog is a separate owner command.</p>
+    <div id="save-confirmation" class="save-confirmation" role="status" aria-live="polite" tabindex="-1" hidden></div>
     <div id="identity-banner" class="banner" hidden></div>
     <div id="error" class="banner danger" role="alert" hidden></div>
     <div id="status" class="status" role="status" aria-live="polite"></div>

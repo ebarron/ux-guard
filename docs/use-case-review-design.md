@@ -21,8 +21,10 @@ enforcement.
 
 This is an added command. `setup`, `check`, `report`, and the policy
 lifecycle commands are unchanged. Catalog, baseline, target, waiver, and
-configuration schemas are unchanged. There is no new runtime dependency.
-TypeScript remains the only one.
+configuration version numbers are unchanged. Catalog validation now treats
+entry points as optional implementation bindings and `owner` as accepted
+legacy metadata rather than definition validity. There is no new runtime
+dependency. TypeScript remains the only one.
 
 Files appear only when someone prepares a candidate, saves a review, or runs
 `review adopt`. The active catalog changes only when `review adopt` is run
@@ -69,8 +71,11 @@ waivers are not modified.
 
 Proposals are grouped by the user outcome they serve. Each proposal can be
 left undecided, approved as written, approved with field revisions, rejected,
-merged into an accepted use case, or split into parts. The owner can also add
-a use case the assessment missed.
+merged into an accepted use case, or split into parts. Definition fields are
+editable while the proposal stays undecided. Those edits are a draft revision:
+they can be saved, reset, or explicitly approved later and never imply
+acceptance by themselves. The reviewer can also add a use case the assessment
+missed.
 
 A surface or workflow is mapped to one or more use cases, excluded with its
 own rationale, or left unresolved. An exclusion does not inherit the
@@ -78,15 +83,36 @@ assessment's reason for mapping that item. Without a rationale it stays
 unresolved.
 
 Rejecting or splitting a proposal leaves anything mapped to it unresolved
-until it is remapped. A merge contributes the proposal's starts,
-requirements, and gaps to an accepted target. A mapped surface becomes a
-`starts` entry on its use cases, including use cases already in the active
-catalog.
+until it is remapped. A merge contributes the proposal's entry points,
+requirements, and gaps to an accepted target. A mapped navigation surface
+becomes a `starts` binding on its use cases, including use cases already in the
+active catalog.
 
-A use case enters the generated catalog only when it has the fields the
-catalog already requires: title, persona, tier, effect, owner, goal, success,
-and at least one start. Missing fields stay visible as blocking reasons.
+A use case enters the generated catalog when it has an id and title, persona,
+goal, success outcome, tier, and effect. Tier and effect remain required
+because existing generic policy uses them to classify reviewed scope. `starts`
+is optional: missing entry points produce a nonblocking unknown implementation
+coverage warning, never omission. `owner` is not required and is not shown in
+the form. Legacy owner metadata is accepted and preserved in existing
+catalogs and candidates so opening or adopting a review does not perform a
+destructive migration. Approval provenance is recorded by `review adopt`.
 Generated entries pass the same catalog validation as `ux-guard check`.
+
+Completeness is computed from those same definition requirements for every
+decision surface. An incomplete source cannot be approved as proposed. Revised
+approval requires at least one changed field and a complete effective
+definition. The server rejects stale clients or hand-authored review payloads
+that attempt either invalid action. Editing an already accepted revision
+returns it to undecided so a new edit cannot inherit an earlier approval.
+Approving the original after drafting requires an explicit discard choice.
+
+Merge selection is intentionally two-phase. Opening merge changes no decision.
+A searchable picker shows existing entries and complete proposals, but only
+accepted targets can complete the merge. Self, rejected, merged, split, and
+incomplete targets are excluded. The preview states which surface/workflow
+mappings, manual and derived entry points, requirements, and gaps move, which
+duplicates collapse, and whether navigation bindings conflict. The engine's
+one-hop resolution and broken-target checks remain authoritative.
 
 Coverage totals count discovered, mapped, awaiting decision, excluded, and
 unresolved items. Unresolved items and exclusions without a rationale are
@@ -146,8 +172,11 @@ There is no telemetry and no external asset.
 
 The page is a view. Decision rules, validation, coverage totals, and the diff
 run in the ux-guard process. Evaluation writes nothing. Save writes the
-review and the preview. Close, or Ctrl+C, stops the server. The browser is
-not opened when `--no-open` is set or `CI` is set.
+review and the preview. Dirty state is prominent, browser unload and Close
+warn before discarding edits, and a successful save shows the revision, UTC
+timestamp, path, and unapproved status while briefly changing the button to
+`Saved ✓`. Close, or Ctrl+C, stops the server. The browser is not opened when
+`--no-open` is set or `CI` is set.
 
 Without a candidate, `review` explains what is missing, prints the agent
 prompt, and writes nothing. An explicit `--candidate` path that does not
@@ -164,7 +193,8 @@ the system dark-mode and reduced-motion preferences.
   kept, and quoting or wrapping can change. The preview diff shows every
   changed line, and the app warns that comments are dropped.
 - **Existing entries.** A use case already in the catalog can gain `starts`
-  from a mapped surface. Its other fields are not edited in the app.
+  from a mapped surface. Its other fields, including legacy `owner` metadata,
+  are preserved and are not edited in the app.
 - **Approval receipt.** The adopt receipt is printed, not stored as a file.
 - **Working files.** The draft, candidate, review, and preview are ordinary
   repository files. They are written only by prepare or save. Leaving them

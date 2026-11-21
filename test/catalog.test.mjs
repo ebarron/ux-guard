@@ -36,6 +36,33 @@ test('accepts assistant starts and deep routes under a surface', () => {
   assert.equal(validateCatalog(catalog, surfaces).useCases.length, 1);
 });
 
+test('accepts use cases without owner or entry points and reports their binding as unknown', () => {
+  const useCase = {
+    id: 'review-records',
+    title: 'Review records',
+    persona: 'Operator',
+    tier: 'secondary',
+    effect: 'read',
+    goal: 'Understand the current record state.',
+    success: 'The relevant records are visible.',
+  };
+  const report = validateCatalog({ version: 1, inventory: 'partial', use_cases: [useCase] }, surfaces);
+  assert.deepEqual(report.useCases, [useCase]);
+  assert.deepEqual(report.unbound, [useCase]);
+  assert.deepEqual(report.unmapped.map(({ id }) => id), ['dashboard', 'records']);
+
+  const emptyBindings = structuredClone(useCase);
+  emptyBindings.starts = [];
+  assert.deepEqual(
+    validateCatalog({ version: 1, inventory: 'partial', use_cases: [emptyBindings] }, surfaces).unbound,
+    [emptyBindings],
+  );
+
+  const legacy = validateCatalog(parseYamlSubset(CATALOG), surfaces);
+  assert.equal(legacy.useCases[0].owner, 'product-owner');
+  assert.equal(legacy.unbound.length, 0);
+});
+
 test('rejects malformed use cases', () => {
   const cases = {
     'unknown navigation id': (c) => (c.use_cases[0].starts[0].nav_id = 'absent'),

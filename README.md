@@ -61,13 +61,15 @@ Work through these four review stages to get a useful first result.
 ### 1. Define the user outcomes that matter
 
 Start with workflows, not routes or components. Identify who is trying to do
-what, where they start, what success means, and who owns the decision. The
-result is a repository-owned use-case catalog for product review.
+what and what success means. Entry points are optional implementation bindings,
+so an important use case can be defined before its route or prompt is known.
+Approval provenance is recorded separately when the catalog is adopted.
 
 > Help me define and review ux-guard use cases for this repo. Identify the
-> important user workflows, personas, goals, success outcomes, starting points,
-> priority tiers, and owners. Prepare the use-case catalog for review, but do
-> not approve or activate it.
+> important user workflows, personas, goals, success outcomes, priority tiers,
+> and effects. Record known entry points as optional bindings and leave unknown
+> bindings visible. Prepare the use-case catalog for review, but do not approve
+> or activate it.
 
 A product owner should confirm that the catalog covers the workflows whose
 quality and backslide actually matter.
@@ -179,8 +181,16 @@ npx ux-guard review
 In the app, approve, revise, reject, merge, or split proposed use cases, add
 missed ones, map every navigation surface and workflow to a use case or an
 explicit exclusion, and preview the exact catalog diff. Saving records an
-unapproved review; it changes no active policy. Unknowns stay unresolved
-instead of being counted as covered.
+unapproved review; it changes no active policy. Use cases without entry-point
+bindings remain in the preview with implementation coverage marked unknown.
+Unknowns are never counted as measured coverage.
+
+Proposals stay **Undecided** while you edit definition drafts. Incomplete
+proposals cannot be approved as proposed, revised approval stays unavailable
+until the draft is complete, and saving can preserve unfinished draft edits
+without accepting them. Merge uses an explicit searchable target picker and
+shows what mappings and implementation details will move before recording the
+decision.
 
 Later, resume with:
 
@@ -310,7 +320,7 @@ gives the next safe action instead of reporting success.
 - [Use-case review](docs/use-case-review.md)
 - [Use-case review design](docs/use-case-review-design.md)
 - [Scoring and backslide semantics](docs/scoring-and-backslide.md)
-- [Enumerated 147-test catalog and verification commands](docs/test-suite.md)
+- [Enumerated 155-test catalog and verification commands](docs/test-suite.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 - [Source provenance](PROVENANCE.md)

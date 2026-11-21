@@ -21,8 +21,27 @@ not guaranteed before 1.0.
   baselines, targets, waivers, and enforcement unchanged.
 - Added use-case review guidance and prompts to the bundled skill,
   `docs/use-case-review.md`, and `docs/use-case-review-design.md`.
-- Added 36 tests for the review model, storage safety, local-server security,
+- Added 43 tests for the review model, storage safety, local-server security,
   CLI, and keyboard and labelling behavior.
+
+### Changed
+
+- Use-case validity now requires identity/title, persona, goal, success, tier,
+  and effect. Entry points are optional implementation bindings; missing
+  bindings remain in catalog previews with unknown implementation coverage.
+- Removed `owner` from use-case requirements and the review form. Existing
+  owner metadata remains readable and is preserved without migration; approval
+  provenance stays in the separate adoption record.
+- Made dirty and saved state prominent in the review app, including revision,
+  UTC timestamp, path, unapproved status, `Saved ✓` feedback, unload
+  protection, and explicit confirmation before discarding dirty edits.
+- Made proposal editing draft-first: undecided drafts are saveable, incomplete
+  approvals are unavailable and rejected server-side, revised approval is a
+  separate explicit action, and resetting or approving the original cannot
+  silently discard edits.
+- Replaced automatic merge targeting with a searchable, explicit picker that
+  reports target status and mapping counts and previews moved bindings,
+  requirements, gaps, duplicates, and conflicts.
 
 ## [0.6.1] - 2026-11-18
 
