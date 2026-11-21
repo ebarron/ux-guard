@@ -199,6 +199,16 @@ try {
       `npm package is missing ${packagedPath}`,
     );
   }
+  const installedReviewApp = readFileSync(join(installedRoot, 'lib/review-app/app.js'), 'utf8');
+  assert.match(installedReviewApp, /Entry points \(optional\)/);
+  assert.match(installedReviewApp, /Definition draft/);
+  assert.match(installedReviewApp, /Merge this proposal into …/);
+  assert.match(installedReviewApp, /beforeunload/);
+  assert.match(readFileSync(join(installedRoot, 'lib/review.mjs'), 'utf8'), /cannot be approved as proposed/);
+  assert.match(
+    readFileSync(join(installedRoot, 'lib/review-app/index.html'), 'utf8'),
+    /id="save-confirmation"[^>]*aria-live="polite"/,
+  );
 
   const importProgram = [
     ...EXPORTS.map(

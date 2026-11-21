@@ -230,7 +230,7 @@ function verifyRepositoryBoundary() {
     const source = readFileSync(join(ROOT, 'test', name), 'utf8');
     return count + [...source.matchAll(/^test\(/gm)].length;
   }, 0);
-  assert.equal(testCount, 147);
+  assert.equal(testCount, 154);
 }
 
 function verifyPackedBoundary() {

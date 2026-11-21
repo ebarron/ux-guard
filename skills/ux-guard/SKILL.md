@@ -58,9 +58,11 @@ When the user continues after setup:
 
 1. Define and review the use-case catalog. Inspect product documentation,
    navigation, and existing tests, then propose the important workflows with a
-   persona, goal, success outcome, starting point, priority tier, effect, and
-   owner. Keep the catalog partial or unapproved until an owner confirms its
-   coverage.
+   persona, goal, success outcome, priority tier, and effect. Record known
+   routes or prompts as optional entry-point bindings; do not invent them or
+   invalidate a use case when they are unknown. Keep the catalog partial or
+   unapproved until a reviewer confirms its coverage. Approval provenance is
+   recorded separately from the use-case definition.
 2. Review observed controls and patterns. Use setup findings and the supporting
    review file to show controls, props, components, icons, styling, and pattern
    debt. Ask the owner to classify each item as an approved convention,
@@ -78,7 +80,7 @@ When the user continues after setup:
 
 Offer these directly usable onboarding prompts:
 
-- `Help me define and review ux-guard use cases for this repo. Identify the important user workflows, personas, goals, success outcomes, starting points, priority tiers, and owners. Prepare the use-case catalog for review, but do not approve or activate it.`
+- `Help me define and review ux-guard use cases for this repo. Identify the important user workflows, personas, goals, success outcomes, priority tiers, and effects. Record known entry points as optional bindings and leave unknown bindings visible. Prepare the use-case catalog for review, but do not approve or activate it.`
 - `Inspect ux-guard's setup findings and ux-guard/setup-proposal.json. Show me the observed controls, control props, components, icons, and styling patterns. Help me classify each as an approved convention, tolerated existing debt to record in the baseline, or a non-approved pattern to fix. Do not change policy or baselines.`
 - `Prepare ux-guard's baseline review work for the approved use cases and UI conventions. Use only real repository evidence: the setup proposal for static patterns and the existing browser harness for configured journeys or visuals. Show what each proposed baseline would tolerate, keep every artifact unapproved, and stop before promotion.`
 - `These exact ux-guard review artifacts and resulting files are approved: [list paths]. Activate only those approvals. Run ux-guard check and, if journey reporting is configured, ux-guard report. Explain the first result as good, needs attention, and unknown. Separate enforceable policy findings from advisory UX findings. Do not add waivers or change policy or baselines.`
@@ -95,9 +97,16 @@ exclusions. The package's `docs/use-case-review.md` defines the draft format.
    read the navigation sources and UI workflows, then write
    `ux-guard/use-case-draft.json` with surfaces, workflows, proposed use cases
    grouped by user outcome, and a proposed mapping or exclusion for each item.
-   Mark anything with unclear ownership or scope as `unresolved` and record
-   open questions; never guess to make coverage look complete. Never write
-   repository identity or hashes yourself.
+   Define each use case with an id/title, persona, goal, success outcome, tier,
+   and effect. Add `starts` only for known implementation bindings; missing
+   bindings must remain visible as unknown coverage rather than blocking or
+   hiding the use case. Mark anything with unclear scope as `unresolved` and
+   record open questions; never guess to make coverage look complete. Never
+   write repository identity or hashes yourself.
+   Normally provide every required definition field supported by evidence so
+   proposals arrive reviewable: id/title, persona, goal, success outcome, tier,
+   and effect. Never invent a goal or success statement to make a proposal
+   complete; leave it missing and explain the evidence gap.
 3. Run the local `review prepare`. It refuses to overwrite an existing
    candidate; report that instead of choosing another path silently.
 4. If the candidate is stale, explain which assessed files changed and ask
@@ -107,6 +116,9 @@ exclusions. The package's `docs/use-case-review.md` defines the draft format.
 6. Explain the proposals in plain language: what each use case lets a person
    do, why it was proposed, which surfaces and workflows it covers, and what
    remains unresolved or blocked. Present choices; let the user decide.
+   Explain that definition edits remain an undecided draft until the user
+   explicitly approves the revision. For merge, explain the selected target
+   and the movement preview; never choose a target on the user's behalf.
 
 The user makes every decision in the app. Do not edit
 `ux-guard/use-case-review.json` or the preview to approve, map, or exclude on

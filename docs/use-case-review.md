@@ -36,17 +36,20 @@ Other prompts the bundled skill understands:
    assessed file. Navigation surfaces found in source but missing from the
    draft are listed and later appear as unresolved.
 3. **Review.** `ux-guard review` starts the local app. In it, people:
-   - approve, revise, reject, merge, or split each proposal, and add missed
-     use cases;
+   - edit a definition draft while its proposal remains undecided, then
+     explicitly approve the original or revised proposal, reject it, merge it,
+     split it, or add a missed use case;
    - map each surface and workflow to use cases, or exclude it with a
      rationale;
-   - edit persona, tier, effect, success outcome, rationale, and starts;
+   - edit persona, goal, success outcome, tier, effect, rationale, and optional
+     entry points;
    - see unresolved decisions, validation problems, and coverage totals;
    - preview the exact catalog diff.
 4. **Save.** Saving writes the decisions to `ux-guard/use-case-review.json` and
    the generated catalog to `ux-guard/use-case-catalog.preview.yml`. Both are
-   unapproved. Saving can be repeated; reopening the app resumes from the saved
-   decisions.
+   unapproved. The app shows the saved revision, UTC timestamp, path, and
+   unapproved status. Saving can be repeated; reopening the app resumes from
+   the saved decisions. Dirty reviews warn before browser unload or Close.
 5. **Adopt, separately.** Only after explicit owner approval, the owner runs
    `ux-guard review adopt` in a terminal. The app shows the command but never
    runs it.
@@ -123,7 +126,6 @@ instead of ignored.
       "persona": "Analyst",
       "tier": "tertiary",
       "effect": "read",
-      "owner": "product-owner",
       "goal": "Export the record list.",
       "success": "A file with the visible records downloads.",
       "rationale": "Export is offered from the record list.",
@@ -165,12 +167,22 @@ Fields:
 - `outcomes` group proposals by the user outcome they serve.
 - A proposal needs `id` (lowercase words separated by hyphens) and `title`.
   `persona`, `tier` (`primary`, `secondary`, `tertiary`), `effect` (`read`,
-  `create`, `change`), `owner`, `goal`, `success`, and at least one `starts`
-  entry are required before it can enter the catalog; missing fields stay
-  visible as reasons. `starts` entries are `{ "nav_id", "route" }` or
-  `{ "entry": "assistant", "prompt" }`. `requirements`, `gaps`, `rationale`,
-  and `capability` (`present`, `partial`, `absent`, `deployment-dependent`,
-  `not-applicable`, `unknown`) are optional.
+  `create`, `change`), `goal`, and `success` are required before it can enter
+  the catalog; missing definition fields stay visible as reasons. `starts` is
+  an optional implementation binding whose entries are `{ "nav_id", "route" }`
+  or `{ "entry": "assistant", "prompt" }`. A use case without `starts` remains
+  valid and appears in the preview with implementation coverage marked
+  unknown. `requirements`, `gaps`, `rationale`, and `capability` (`present`,
+  `partial`, `absent`, `deployment-dependent`, `not-applicable`, `unknown`)
+  are optional.
+- Assessment authors should normally provide every definition field supported
+  by repository evidence. `review prepare` reports incomplete proposals by
+  field. It never invents a goal or success statement; missing content remains
+  an explicit draft task in the app.
+- Legacy `owner` metadata is accepted and preserved when it already exists in
+  a catalog or candidate, but the review form does not collect or require it.
+  Approval provenance belongs to the separate adoption record. No migration
+  removes legacy metadata.
 - A surface needs `id`, `label`, and `classification`; `route`, `kind`
   (`destination`, `group`, `subtree`, `hidden`, `other`), and `sources` are
   optional. A workflow needs `id`, `title`, and `classification`; `entry`,
@@ -187,8 +199,10 @@ Fields:
   totals; proposal progress; every unresolved decision with a link to it;
   blocking issues and warnings; open questions from the assessment.
 - **Use cases**: proposals grouped by outcome with search and decision
-  filters, a decision form, editable catalog fields, merge and split controls,
-  and the source surfaces and workflows beside the resulting catalog entry.
+  filters, draft-first editable definition fields, completeness guidance,
+  explicit original/revised approval, reset-to-proposal controls, searchable
+  merge targets with movement previews, split controls, and the source surfaces
+  and workflows beside the resulting catalog entry.
 - **Surfaces and workflows**: each item with its route, sources, and the
   assessment's proposal; map it to use cases, exclude it with a required
   rationale, or leave it unresolved.
@@ -196,11 +210,27 @@ Fields:
   full generated catalog, entries that cannot be included yet and why, and the
   adoption steps.
 
-A mapped surface becomes a `starts` entry of its use cases, including use
-cases already in the active catalog. A merged proposal contributes its starts,
-requirements, and gaps to its target. Rejecting or splitting a proposal leaves
-anything mapped to it unresolved until it is remapped. An exclusion without a
-rationale counts as unresolved.
+A mapped navigation surface becomes a `starts` entry of its use cases,
+including use cases already in the active catalog. Manual route and assistant
+bindings remain supported. A merged proposal contributes its entry points,
+requirements, and gaps to its target. A use case with no manual or derived
+entry point stays in the catalog while its implementation coverage is shown as
+unknown. Rejecting or splitting a proposal leaves anything mapped to it
+unresolved until it is remapped. An exclusion without a rationale counts as
+unresolved.
+
+Editing a candidate stores `fields` on an `action: "pending"` decision. Saving
+preserves that draft without accepting it. Approving the revised proposal is a
+separate action and is refused until all required definition fields are
+present. Approving the original while draft edits exist requires explicit
+confirmation that those edits will be discarded. Stale or hand-authored
+approval choices for incomplete definitions are rejected by the local API.
+
+Merge does not choose a target automatically. Its picker lists active and
+reviewed targets, shows complete undecided proposals as unavailable until they
+are accepted, excludes self/rejected/incomplete targets, and displays title,
+id, status, goal or outcome, mapping counts, entry points, and a preview of
+mappings, bindings, requirements, gaps, duplicates, and conflicts.
 
 ## Safety model
 
@@ -238,6 +268,8 @@ Design decisions, schema boundaries, and accepted limits are recorded in
 
 The app uses native controls with visible labels, a skip link, landmark
 regions, the tab pattern with arrow, Home, and End keys, arrow-key navigation
-in lists, visible focus, a polite status region for every change and save, an
-alert region for errors, and text labels on every status color. It follows the
-system dark-mode and reduced-motion preferences. Ctrl+S or Cmd+S saves.
+in lists, visible focus, polite live status for every change and save, a
+focusable save confirmation, an alert region for errors, and text labels on
+every status color. Dirty state is prominent, browser unload and Close warn
+before discarding edits, and the clean Save button stays disabled. It follows
+the system dark-mode and reduced-motion preferences. Ctrl+S or Cmd+S saves.

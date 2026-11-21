@@ -255,13 +255,26 @@ async function loadApp(t, { root = prepared(reviewRepo()).root } = {}) {
   const server = await startReviewServer((await import('./review-helpers.mjs')).context(root));
   const document = createDocument(readFileSync(join(APP, 'index.html'), 'utf8'));
   const storage = new Map();
+  const windowListeners = new Map();
+  const confirmCalls = [];
   const window = {
     location: { hash: `#token=${server.token}`, pathname: '/' },
     history: { replaceState: (_, __, path) => (window.location.hash = path.includes('#') ? path.slice(path.indexOf('#')) : '') },
     sessionStorage: { getItem: (key) => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, String(value)) },
     setTimeout: (...args) => setTimeout(...args),
     clearTimeout: (handle) => clearTimeout(handle),
-    addEventListener() {},
+    confirm: (message) => {
+      confirmCalls.push(message);
+      return true;
+    },
+    addEventListener(type, listener) {
+      if (!windowListeners.has(type)) windowListeners.set(type, []);
+      windowListeners.get(type).push(listener);
+    },
+    dispatchEvent(event) {
+      for (const listener of windowListeners.get(event.type) ?? []) listener(event);
+      return !event.defaultPrevented;
+    },
   };
   const saved = {};
   const globals = {
@@ -289,7 +302,7 @@ async function loadApp(t, { root = prepared(reviewRepo()).root } = {}) {
     'the first render',
   );
   assert.equal(document.getElementById('error').hidden, true, document.getElementById('error').textContent);
-  return { document, window, server, root, storage };
+  return { document, window, server, root, storage, confirmCalls };
 }
 
 async function until(condition, message = 'condition') {
@@ -353,6 +366,8 @@ test('the review page has landmarks, a skip link, live regions, and a labelled t
   assert.ok(document.querySelector('nav[aria-label]'));
   assert.equal(document.getElementById('status').getAttribute('role'), 'status');
   assert.equal(document.getElementById('status').getAttribute('aria-live'), 'polite');
+  assert.equal(document.getElementById('save-confirmation').getAttribute('role'), 'status');
+  assert.equal(document.getElementById('save-confirmation').getAttribute('aria-live'), 'polite');
   assert.equal(document.getElementById('error').getAttribute('role'), 'alert');
   assert.match(document.getElementById('save').getAttribute('aria-keyshortcuts'), /Control\+S/);
   const tabs = document.querySelectorAll('button[role="tab"]');
@@ -375,10 +390,14 @@ test('every rendered control is labelled and every reference resolves across vie
     document.getElementById('panel-use-cases').querySelectorAll('button[data-list-item]')[index].click();
     assert.deepEqual(auditLabels(document), [], `use case ${index}`);
   }
-  const radio = document.getElementById('decision-revise');
-  radio.checked = true;
-  radio.dispatchEvent(makeEvent('change'));
-  await until(() => !document.getElementById('field-title').hasAttribute('readonly'), 'revise to unlock fields');
+  assert.equal(document.getElementById('field-title').hasAttribute('readonly'), false, 'undecided proposals are editable');
+  assert.equal(document.getElementById('decision-revise').disabled, true, 'revised approval needs a draft change');
+  assert.equal(document.querySelector('label[for="field-owner"]'), null);
+  assert.equal(document.querySelector('label[for="field-starts"]').textContent, 'Entry points (optional)');
+  assert.match(
+    document.getElementById('field-starts-help').textContent,
+    /Leave blank when the implementation binding is not known yet/,
+  );
   assert.deepEqual(auditLabels(document), [], 'revise form');
   const subjects = document.getElementById('panel-coverage').querySelectorAll('button[data-list-item]');
   assert.ok(subjects.length >= 5);
@@ -423,6 +442,131 @@ test('tabs and lists follow the arrow, Home, and End keyboard pattern', async (t
   assert.equal(document.activeElement, items()[0]);
 });
 
+test('undecided definition edits persist as drafts and require explicit revised approval', async (t) => {
+  const { document, root } = await loadApp(t);
+  document
+    .getElementById('panel-use-cases')
+    .querySelectorAll('button[data-list-item]')
+    .find((button) => /Archive a record/.test(button.textContent))
+    .click();
+
+  const approve = document.getElementById('decision-approve');
+  assert.equal(approve.disabled, true);
+  assert.match(document.getElementById('decision-approve-help').textContent, /Unavailable until Goal, Success outcome/);
+  const goalLink = document.querySelector('button[data-focus-key="missing:goal"]');
+  goalLink.click();
+  assert.equal(document.activeElement, document.getElementById('field-goal'));
+
+  const goal = document.getElementById('field-goal');
+  goal.value = 'Remove an old record from active work.';
+  goal.dispatchEvent(makeEvent('input'));
+  const success = document.getElementById('field-success');
+  success.value = 'The record is archived.';
+  success.dispatchEvent(makeEvent('input'));
+  await until(() => /Draft revision · still Undecided/.test(document.getElementById('panel-use-cases').textContent), 'draft revision');
+  assert.equal(document.getElementById('decision-pending').checked, true);
+  assert.equal(document.getElementById('decision-revise').disabled, false);
+  assert.match(document.getElementById('decision-revise-help').textContent, /Accept your draft changes to Goal, Success outcome/);
+
+  document.getElementById('save').click();
+  await until(() => /Saved revision 1/.test(document.getElementById('save-confirmation').textContent), 'draft save');
+  let saved = JSON.parse(readFileSync(join(root, DEFAULT_REVIEW_PATHS.review), 'utf8'));
+  assert.equal(saved.proposals['archive-record'].action, 'pending');
+  assert.equal(saved.proposals['archive-record'].fields.goal, 'Remove an old record from active work.');
+
+  const revise = document.getElementById('decision-revise');
+  revise.checked = true;
+  revise.dispatchEvent(makeEvent('change'));
+  await until(() => document.getElementById('decision-revise')?.checked === true, 'explicit revised approval');
+  assert.match(document.getElementById('panel-use-cases').textContent, /Approved revised proposal/);
+  document.getElementById('save').click();
+  await until(() => /Saved revision 2/.test(document.getElementById('save-confirmation').textContent), 'approved revision save');
+  saved = JSON.parse(readFileSync(join(root, DEFAULT_REVIEW_PATHS.review), 'utf8'));
+  assert.equal(saved.proposals['archive-record'].action, 'revise');
+  assert.deepEqual(Object.keys(saved.proposals['archive-record'].fields), ['goal', 'success']);
+});
+
+test('draft reset and original approval require explicit discard without losing edits silently', async (t) => {
+  const { document, window, confirmCalls } = await loadApp(t);
+  const proposedGoal = document.getElementById('field-goal').value;
+  const editGoal = async (value) => {
+    const goal = document.getElementById('field-goal');
+    goal.value = value;
+    goal.dispatchEvent(makeEvent('input'));
+    await until(() => /Draft revision · still Undecided/.test(document.getElementById('panel-use-cases').textContent), 'goal draft');
+  };
+
+  await editGoal('Review activity before starting work.');
+  document.querySelector('button[data-focus-key="reset-draft"]').click();
+  await until(() => document.querySelector('button[data-focus-key="reset-draft"]') === null, 'draft reset');
+  assert.equal(document.getElementById('field-goal').value, proposedGoal);
+
+  await editGoal('Review activity and identify priorities.');
+  window.confirm = (message) => {
+    confirmCalls.push(message);
+    return false;
+  };
+  let approve = document.getElementById('decision-approve');
+  approve.checked = true;
+  approve.dispatchEvent(makeEvent('change'));
+  assert.match(confirmCalls[0], /Discard your draft changes to Goal/);
+  assert.ok(document.querySelector('button[data-focus-key="reset-draft"]'));
+  assert.equal(document.getElementById('decision-pending').checked, true);
+
+  window.confirm = (message) => {
+    confirmCalls.push(message);
+    return true;
+  };
+  approve = document.getElementById('decision-approve');
+  approve.checked = true;
+  approve.dispatchEvent(makeEvent('change'));
+  await until(() => document.getElementById('field-goal')?.hasAttribute('readonly'), 'original approval after discard');
+  assert.equal(document.getElementById('decision-approve').checked, true);
+  assert.equal(document.querySelector('button[data-focus-key="reset-draft"]'), null);
+  assert.equal(document.getElementById('field-goal').value, proposedGoal);
+  assert.equal(confirmCalls.length, 2);
+});
+
+test('merge requires a searchable explicit target and previews what will move', async (t) => {
+  const { document, root } = await loadApp(t);
+  document
+    .getElementById('panel-use-cases')
+    .querySelectorAll('button[data-list-item]')
+    .find((button) => /Archive a record/.test(button.textContent))
+    .click();
+  const merge = document.getElementById('decision-merge');
+  assert.equal(merge.disabled, false);
+  merge.checked = true;
+  merge.dispatchEvent(makeEvent('change'));
+  assert.equal(document.activeElement, document.getElementById('merge-target-search'));
+  assert.equal(document.getElementById('save').disabled, true, 'opening the picker is not a completed decision');
+  assert.match(document.getElementById('panel-use-cases').textContent, /Merge this proposal into …/);
+
+  const pendingTarget = document.querySelector('button[data-focus-key="merge-target:export-records"]');
+  assert.equal(pendingTarget.disabled, true);
+  assert.match(pendingTarget.textContent, /Must first be accepted/);
+  const existingTarget = document.querySelector('button[data-focus-key="merge-target:create-record"]');
+  assert.equal(existingTarget.disabled, false);
+  assert.match(existingTarget.textContent, /surface\(s\).*workflow\(s\).*entry point\(s\)/);
+
+  const search = document.getElementById('merge-target-search');
+  search.value = 'create';
+  search.dispatchEvent(makeEvent('input'));
+  assert.equal(document.activeElement, document.getElementById('merge-target-search'), 'search keeps keyboard focus');
+  assert.equal(document.querySelector('button[data-focus-key="merge-target:export-records"]'), null);
+  document.querySelector('button[data-focus-key="merge-target:create-record"]').click();
+  await until(() => /Merge preview: archive-record → create-record/.test(document.getElementById('panel-use-cases').textContent), 'merge preview');
+  assert.match(document.getElementById('panel-use-cases').textContent, /workflow mapping\(s\) will resolve to the target/);
+  assert.match(document.getElementById('panel-use-cases').textContent, /source title, persona, goal, success outcome/i);
+  assert.equal(document.getElementById('save').disabled, false);
+  assert.deepEqual(auditLabels(document), []);
+
+  document.getElementById('save').click();
+  await until(() => /Saved revision 1/.test(document.getElementById('save-confirmation').textContent), 'merge save');
+  const saved = JSON.parse(readFileSync(join(root, DEFAULT_REVIEW_PATHS.review), 'utf8'));
+  assert.deepEqual(saved.proposals['archive-record'], { action: 'merge', into: 'create-record' });
+});
+
 test('decisions keep focus through re-rendering and Ctrl+S saves with an unapproved announcement', async (t) => {
   const { document, root } = await loadApp(t);
   const save = document.getElementById('save');
@@ -440,12 +584,51 @@ test('decisions keep focus through re-rendering and Ctrl+S saves with an unappro
   const shortcut = key(document.getElementById('decision-approve'), 's', { ctrlKey: true });
   assert.equal(shortcut.defaultPrevented, true);
   await until(() => /Saved revision 1/.test(document.getElementById('status').textContent), 'save announcement');
-  assert.match(document.getElementById('status').textContent, /unapproved review\. Nothing was approved, adopted, or enforced\./);
+  assert.match(document.getElementById('status').textContent, /Status: unapproved\. Nothing was approved, adopted, checked in, or enforced\./);
   assert.match(document.getElementById('save-state').textContent, /Saved revision 1 · unapproved/);
+  const confirmation = document.getElementById('save-confirmation');
+  assert.equal(confirmation.hidden, false);
+  assert.match(confirmation.textContent, /Saved revision 1 at \d{4}-\d{2}-\d{2}T/);
+  assert.match(confirmation.textContent, new RegExp(DEFAULT_REVIEW_PATHS.review.replaceAll('/', '\\/')));
+  assert.equal(document.activeElement, confirmation);
+  assert.equal(save.textContent, 'Saved ✓');
   assert.equal(save.disabled, true);
   const saved = JSON.parse(readFileSync(join(root, DEFAULT_REVIEW_PATHS.review), 'utf8'));
   assert.equal(saved.approval.status, 'unapproved');
   assert.equal(Object.values(saved.proposals)[0].action, 'approve');
+});
+
+test('dirty reviews warn on browser unload and require confirmation before close', async (t) => {
+  const { document, window, server, confirmCalls } = await loadApp(t);
+  const approve = document.getElementById('decision-approve');
+  approve.checked = true;
+  approve.dispatchEvent(makeEvent('change'));
+  assert.match(document.getElementById('save-state').textContent, /Unsaved changes/);
+  assert.equal(document.getElementById('save-state').classList.contains('unsaved'), true);
+
+  const unload = makeEvent('beforeunload');
+  window.dispatchEvent(unload);
+  assert.equal(unload.defaultPrevented, true);
+  assert.equal(unload.returnValue, '');
+
+  window.confirm = (message) => {
+    confirmCalls.push(message);
+    return false;
+  };
+  document.getElementById('close').click();
+  await until(() => /Close cancelled/.test(document.getElementById('status').textContent), 'close cancellation');
+  assert.match(confirmCalls[0], /discard those unsaved changes/);
+  assert.equal(document.activeElement, document.getElementById('save'));
+  assert.equal((await nodeFetch(`${server.origin}/`)).status, 200);
+
+  window.confirm = (message) => {
+    confirmCalls.push(message);
+    return true;
+  };
+  document.getElementById('close').click();
+  await until(() => /review is closed/i.test(document.body.textContent), 'confirmed close');
+  assert.equal(confirmCalls.length, 2);
+  assert.equal(document.activeElement.id, 'main');
 });
 
 test('an exclusion without a rationale is flagged in place and stays unresolved', async (t) => {

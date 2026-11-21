@@ -71,6 +71,8 @@ test('prepare and adopt run end to end and leave configuration and baselines unc
   const prepare = await run(['--root', root, 'review', 'prepare']);
   assert.equal(prepare.code, 0, prepare.err);
   assert.match(prepare.out, /Stamped ux-guard\/use-case-candidate\.json/);
+  assert.match(prepare.out, /archive-record: Goal, Success outcome/);
+  assert.match(prepare.out, /Add only content supported by repository evidence/);
   assert.match(prepare.out, /Status: unapproved\. Nothing else was written\./);
   const again = await run(['--root', root, 'review', 'prepare']);
   assert.equal(again.code, 2);

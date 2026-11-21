@@ -9,6 +9,7 @@ import {
   stampCandidate,
   subjectKey,
   unifiedDiff,
+  validateReviewDecisionCompleteness,
   validateUseCaseCandidate,
   validateUseCaseReview,
 } from '../lib/review.mjs';
@@ -59,6 +60,24 @@ test('use-case candidates validate strictly and reject approval, forged identity
   assert.equal(value.kind, 'ux-guard-use-case-candidate');
   assert.deepEqual(value.approval, { status: 'unapproved', activatesCatalog: false });
   assert.equal(validateUseCaseCandidate(structuredClone(value)).proposals.length, 3);
+  const ownerless = validateUseCaseCandidate(
+    draft({
+      proposals: [
+        {
+          id: 'access-console',
+          title: 'Access Console',
+          persona: 'Console administrator',
+          goal: 'Use the Console securely.',
+          success: 'The administrator signs in and can end the session.',
+          tier: 'secondary',
+          effect: 'read',
+        },
+      ],
+    }),
+    { draft: true },
+  );
+  assert.equal(ownerless.proposals[0].owner, undefined);
+  assert.equal(ownerless.proposals[0].starts, undefined);
 
   const cases = [
     [{ approval: { status: 'approved', activatesCatalog: true } }, /must be unapproved/],
@@ -114,6 +133,60 @@ test('review decisions round-trip canonically and reject unknown proposals, subj
   }
 });
 
+test('draft revisions remain undecided until explicitly accepted and incomplete approvals are rejected', () => {
+  const value = candidate();
+  const pending = validateUseCaseReview(
+    {
+      ...emptyReview('ux-guard/use-case-candidate.json', SHA),
+      proposals: {
+        'archive-record': {
+          action: 'pending',
+          fields: {
+            goal: 'Remove an old record from the active list.',
+            success: 'The record is archived.',
+          },
+        },
+      },
+    },
+    scope(value),
+  );
+  assert.doesNotThrow(() => validateReviewDecisionCompleteness(value, pending));
+  const draftState = computeReview({
+    candidate: value,
+    review: pending,
+    activeCatalog: { path: 'ux/use-cases.yml', origin: 'config', text: CATALOG },
+  });
+  const draftItem = item(draftState, 'archive-record');
+  assert.equal(draftItem.action, 'pending');
+  assert.equal(draftItem.catalogEntry, null);
+  assert.equal(draftItem.draftCompleteness.complete, true);
+  assert.deepEqual(draftItem.changedFields, ['goal', 'success']);
+
+  const revised = structuredClone(pending);
+  revised.proposals['archive-record'].action = 'revise';
+  assert.doesNotThrow(() => validateReviewDecisionCompleteness(value, revised));
+  const accepted = computeReview({
+    candidate: value,
+    review: revised,
+    activeCatalog: { path: 'ux/use-cases.yml', origin: 'config', text: CATALOG },
+  });
+  assert.equal(item(accepted, 'archive-record').action, 'revise');
+  assert.equal(item(accepted, 'archive-record').catalogEntry.goal, 'Remove an old record from the active list.');
+
+  const approveIncomplete = structuredClone(pending);
+  approveIncomplete.proposals['archive-record'] = { action: 'approve' };
+  assert.throws(
+    () => validateReviewDecisionCompleteness(value, approveIncomplete),
+    /cannot be approved as proposed until Goal, Success outcome/,
+  );
+  const reviseIncomplete = structuredClone(pending);
+  reviseIncomplete.proposals['archive-record'] = { action: 'revise', fields: { goal: 'Archive it.' } };
+  assert.throws(
+    () => validateReviewDecisionCompleteness(value, reviseIncomplete),
+    /cannot approve the revised proposal until Success outcome/,
+  );
+});
+
 test('approve and revise add complete entries while incomplete proposals stay out with reasons', () => {
   const value = candidate();
   const state = evaluate(value, {
@@ -124,26 +197,38 @@ test('approve and revise add complete entries while incomplete proposals stay ou
   });
   assert.equal(item(state, 'review-dashboard').catalogEntry.title, 'Review the dashboard');
   assert.deepEqual(item(state, 'review-dashboard').catalogEntry.starts, [{ nav_id: 'dashboard', route: '/dashboard' }]);
+  assert.equal(item(state, 'review-dashboard').catalogEntry.owner, 'product-owner', 'legacy metadata is preserved');
   const archive = item(state, 'archive-record');
   assert.equal(archive.effective.title, 'Archive an old record');
   assert.equal(archive.catalogEntry, null);
-  assert.match(archive.omitted[0], /missing owner, goal, success, starts/);
-  assert.ok(state.issues.some(({ severity, message }) => severity === 'error' && /archive-record cannot enter the catalog/.test(message)));
+  assert.equal(archive.action, 'pending');
+  assert.deepEqual(archive.draftCompleteness.missing, ['goal', 'success']);
+  assert.match(archive.invalidDecision, /revised proposal still needs Goal, Success outcome/);
+  assert.ok(state.issues.some(({ severity, message }) => severity === 'error' && /archive-record: The revised proposal/.test(message)));
 
   const revised = evaluate(value, {
     proposals: {
       'archive-record': {
         action: 'revise',
         fields: {
-          owner: 'records-owner',
           goal: 'Hide records that are no longer used.',
           success: 'The record leaves the active list.',
-          starts: [{ nav_id: 'records', route: '/records' }],
         },
       },
     },
   });
-  assert.equal(item(revised, 'archive-record').catalogEntry.owner, 'records-owner');
+  assert.equal(item(revised, 'archive-record').catalogEntry.owner, undefined);
+  assert.equal(item(revised, 'archive-record').catalogEntry.starts, undefined);
+  assert.deepEqual(item(revised, 'archive-record').implementationCoverage, { status: 'unknown', entryPoints: 0 });
+  assert.deepEqual(revised.catalog.unbound, ['archive-record']);
+  assert.ok(
+    revised.issues.some(
+      ({ severity, message }) =>
+        severity === 'warning' && /archive-record: No entry points are bound; implementation coverage is unknown/.test(message),
+    ),
+  );
+  assert.match(revised.catalog.text, /id: archive-record/);
+  assert.doesNotMatch(revised.catalog.text, /owner: records-owner/);
   assert.equal(revised.summary.proposals.revise, 1);
   assert.equal(revised.summary.proposals.pending, 2);
 });
@@ -164,10 +249,8 @@ test('reject and split leave dependent mappings unresolved until they are remapp
     persona: 'Operator',
     tier: 'secondary',
     effect: 'read',
-    owner: 'product-owner',
     goal: 'Watch one signal.',
     success: 'The signal is visible.',
-    starts: [{ nav_id: 'dashboard', route: '/dashboard' }],
   }));
   const split = evaluate(value, {
     proposals: { 'review-dashboard': { action: 'split', parts: parts.map(({ id }) => id) } },
@@ -232,7 +315,7 @@ test('added use cases and split parts must be complete and cannot collide with t
     ],
   });
   assert.ok(state.issues.some(({ message }) => /create-record duplicates an active catalog use case/.test(message)));
-  assert.match(item(state, 'audit-history').omitted[0], /missing tier, effect, owner, goal, success, starts/);
+  assert.match(item(state, 'audit-history').omitted[0], /missing tier, effect, goal, success/);
   assert.equal(state.summary.proposals.added, 2);
 
   const orphan = evaluate(value, {
